@@ -338,12 +338,19 @@ function empRow(r){
     <span class="r"><span class="f num">${money(r.full)}</span><span class="st ${st.k}">${esc(st.t)}</span></span></button>`;
 }
 function allTable(rows, t){
-  const tr = r => { const st = status(r); return `<tr data-id="${esc(r.empId)}" tabindex="0" role="button"><td>${esc(r.name)}<span class="st ${st.k}">${st.k === 'done' ? '✓ выдано' : st.k === 'chk' ? '! проверить' : 'не выдано'}</span></td><td class="num c-card">${money(r.card)}</td><td class="num c-cash">${money(r.cash)}</td><td class="num">${money(r.full)}</td></tr>`; };
+  const tr = r => { const st = status(r); return `<tr data-id="${esc(r.empId)}" tabindex="0" role="button"><td>${esc(r.name)}${r.miss || r.extra ? `<span class="st" style="color:var(--muted)">${r.miss ? '−' + r.miss + ' дн. ' : ''}${r.extra ? '+' + r.extra + ' дн.' : ''}</span>` : ''}<span class="st ${st.k}">${st.k === 'done' ? '✓ выдано' : st.k === 'chk' ? '! проверить' : 'не выдано'}</span></td><td class="num c-card">${money(r.card)}</td><td class="num c-cash">${money(r.cash)}</td><td class="num">${money(r.full)}</td></tr>`; };
   return `<div class="panel allt"><span class="hint" style="display:block;font-size:13px">Нажмите на строку, чтобы выдать или исправить</span>
     <table><thead><tr><th>Сотрудник</th><th class="c-card">Официально</th><th class="c-cash">Наличные</th><th>Итого</th></tr></thead>
     <tbody>${groupRows(rows).map(g => `<tr class="gh"><td colspan="4">${esc(g.cat)}</td></tr>` + g.rows.map(tr).join('') +
       `<tr class="gs"><td>Итого</td><td class="num c-card">${money(g.rows.reduce((a, r) => a + r.card, 0))}</td><td class="num c-cash">${money(g.rows.reduce((a, r) => a + r.cash, 0))}</td><td class="num">${money(g.full)}</td></tr>`).join('')}
     <tr class="tt"><td>ВСЕГО<br><small>${t.people} чел.</small></td><td class="num c-card">${money(t.card)}</td><td class="num c-cash">${money(t.cash)}</td><td class="num">${money(t.full)}</td></tr></tbody></table></div>`;
+}
+// Норма дней для оклада: рабочие — дней в месяце минус 4 выходных; администрация — будние дни (пн–пт)
+function autoNorm(month, cat){
+  const y = Number(month.slice(0, 4)), m = Number(month.slice(5)), dim = new Date(y, m, 0).getDate();
+  if (catOf(cat) !== 'Администрация') return dim - 4;
+  let n = 0; for (let d = 1; d <= dim; d++) { const w = new Date(y, m - 1, d).getDay(); if (w !== 0 && w !== 6) n++; }
+  return n;
 }
 function sumRows(rows){ const z = k => rows.reduce((a, r) => a + (Number(r[k]) || 0), 0); return { card: z('card'), cash: z('cash'), full: z('full'), people: rows.length }; }
 function showMonth(){
@@ -427,15 +434,20 @@ async function openNew(m){
 function showRow(empId){
   const r = S.data.rows.find(x => x.empId === empId); if (!r) return showMonth();
   const e = empOf(empId);
-  const f = { type: r.type, rate: r.rate, qty: r.qty === '' ? '' : r.qty, full: r.full, card: r.card, gross: r.gross, comment: r.comment, manual: false };
+  const f = { type: r.type, rate: r.rate, qty: r.qty === '' ? '' : r.qty, full: r.full, card: r.card, gross: r.gross, comment: r.comment, manual: false,
+    miss: r.miss || 0, extra: r.extra || 0, norm: r.norm === '' || r.norm == null ? '' : r.norm };
+  const aNorm = autoNorm(S.data.month, e.cat);
+  const normEff = () => Number(f.norm) > 0 ? Number(f.norm) : aNorm;
+  const dayPay = () => normEff() > 0 ? f.rate / normEff() : 0;
   const pays = S.data.pays.filter(p => p.empId === empId);
-  const calcFull = () => f.type === 'Месяц' ? f.rate : Math.round(f.rate * (Number(f.qty) || 0));
+  const calcFull = () => f.type === 'Месяц' ? Math.max(0, Math.round(f.rate + dayPay() * ((Number(f.extra) || 0) - (Number(f.miss) || 0)))) : Math.round(f.rate * (Number(f.qty) || 0));
   f.manual = r.full !== calcFull();
   let editOpen = false;
   const calcHtml = () => { const full = f.full, cash = Math.max(0, full - f.card); return `<div class="calc">
         <div><span class="c-card">На карту</span><span class="num c-card">${money(f.card)}</span></div>
         <div><span class="c-cash">Наличными</span><span class="num c-cash">${money(cash)}</span></div>
         ${f.card > full ? '<div><span class="c-red">На карту больше полной ЗП — проверьте</span><span></span></div>' : ''}
+        ${f.type === 'Месяц' && (Number(f.miss) || Number(f.extra)) ? `<div><span>Оклад ${money(f.rate)} ${Number(f.extra) ? '+ ' + f.extra + ' дн.' : ''} ${Number(f.miss) ? '− ' + f.miss + ' дн.' : ''} × ${money(dayPay())}</span><span class="num">${money(calcFull())}</span></div>` : ''}
         <div class="t"><span>Полная ЗП</span><span class="num">${money(full)}</span></div>
       </div>`; };
   const taxHtml = () => { const g = f.gross, ndfl = Math.round(g * 0.12), soc = Math.round(g * 0.12); return `<div class="calc">
@@ -445,12 +457,14 @@ function showRow(empId){
         <div><span>Налогов всего 24%</span><span class="num">${money(ndfl + soc)}</span></div>
         <div class="t"><span>Затраты на сотрудника</span><span class="num">${money(f.full + ndfl + soc)}</span></div>
       </div><p class="hint">Статья: ${esc(catOf(e.cat))}${PROD.indexOf(catOf(e.cat)) >= 0 ? ' — входит в чистую себестоимость' : ' — входит в полную себестоимость'}.</p>`; };
-  const isDirty = () => f.type !== r.type || f.rate !== r.rate || String(f.qty) !== String(r.qty) || f.full !== r.full || f.card !== r.card || f.gross !== r.gross || f.comment !== r.comment;
+  const isDirty = () => f.type !== r.type || f.rate !== r.rate || String(f.qty) !== String(r.qty) || f.full !== r.full || f.card !== r.card || f.gross !== r.gross || f.comment !== r.comment
+    || Number(f.miss) !== Number(r.miss || 0) || Number(f.extra) !== Number(r.extra || 0) || String(f.norm) !== String(r.norm == null ? '' : r.norm);
   const refresh = () => {
     document.getElementById('calcBox').innerHTML = calcHtml();
     document.getElementById('taxBox').innerHTML = taxHtml();
     const fu = document.getElementById('full'); if (fu && document.activeElement !== fu) fu.value = money(f.full);
     const lab = document.querySelector('label[for=full] em'); if (lab) lab.textContent = f.manual ? '(вписана вручную)' : '(считается сама)';
+    const af = document.getElementById('autoFull'); if (af) { af.hidden = !f.manual; af.textContent = 'Посчитать автоматически: ' + money(calcFull()); }
     const sv = document.getElementById('save'); const d = isDirty(); sv.disabled = !d; sv.textContent = d ? 'Сохранить' : 'Сохранено';
   };
   const draw = () => {
@@ -485,9 +499,17 @@ function showRow(empId){
           <div class="field"><label class="label" for="rate">${f.type === 'Месяц' ? 'Оклад за месяц' : f.type === 'Смена' ? 'Ставка за смену' : 'Ставка за день'}</label>
             <input class="txt money num" id="rate" inputmode="numeric" value="${money(f.rate)}"></div>
           ${f.type !== 'Месяц' ? `<div class="field"><label class="label" for="qty">${f.type === 'Смена' ? 'Смен за месяц' : 'Рабочих дней'}</label>
-            <div class="stepper"><button type="button" id="qm" aria-label="Меньше">−</button><input class="txt num" id="qty" inputmode="numeric" value="${esc(f.qty)}"><button type="button" id="qp" aria-label="Больше">+</button></div></div>` : ''}
+            <div class="stepper"><button type="button" id="qm" aria-label="Меньше">−</button><input class="txt num" id="qty" inputmode="numeric" value="${esc(f.qty)}"><button type="button" id="qp" aria-label="Больше">+</button></div></div>` : `
+          <div class="field"><label class="label" for="dMiss">Пропустил дней</label>
+            <div class="stepper"><button type="button" data-dm="miss:-1" aria-label="Меньше">−</button><input class="txt num" id="dMiss" inputmode="numeric" value="${esc(f.miss)}"><button type="button" data-dm="miss:1" aria-label="Больше">+</button></div></div>
+          <div class="field"><label class="label" for="dExtra">Работал лишних дней</label>
+            <div class="stepper"><button type="button" data-dm="extra:-1" aria-label="Меньше">−</button><input class="txt num" id="dExtra" inputmode="numeric" value="${esc(f.extra)}"><button type="button" data-dm="extra:1" aria-label="Больше">+</button></div></div>
+          <div class="field"><label class="label" for="dNorm">Рабочих дней в месяце <em>(сами: ${aNorm})</em></label>
+            <input class="txt num" id="dNorm" inputmode="numeric" placeholder="${aNorm}" value="${esc(f.norm)}">
+            <span class="hint">1 день = ${money(dayPay())} сум</span></div>`}
           <div class="field"><label class="label" for="full">Полная ЗП <em>${f.manual ? '(вписана вручную)' : '(считается сама)'}</em></label>
-            <input class="txt money num" id="full" inputmode="numeric" value="${money(full)}"></div>
+            <input class="txt money num" id="full" inputmode="numeric" value="${money(full)}">
+            <button class="btn ghost small" type="button" id="autoFull" ${f.manual ? '' : 'hidden'}>Посчитать автоматически: ${money(calcFull())}</button></div>
           <div class="field"><label class="label" for="gross">Начислено официально <em>(из таблицы бухгалтера)</em></label>
             <input class="txt money num" id="gross" inputmode="numeric" value="${money(f.gross)}"></div>
           <div class="field"><label class="label" for="card">На карту <em>(начислено − 12%)</em></label>
@@ -509,6 +531,11 @@ function showRow(empId){
     num('full', 'full', () => { f.manual = f.full !== calcFull(); });
     num('gross', 'gross', () => { f.card = Math.round(f.gross * 0.88); const c = document.getElementById('card'); if (c) c.value = money(f.card); });
     num('card', 'card');
+    const dayIn = (id, key) => { const el = document.getElementById(id); if (!el) return;
+      el.oninput = () => { f[key] = key === 'norm' && el.value.trim() === '' ? '' : Math.min(31, digits(el.value)); if (!f.manual) f.full = calcFull(); refresh(); }; };
+    dayIn('dMiss', 'miss'); dayIn('dExtra', 'extra'); dayIn('dNorm', 'norm');
+    $app.querySelectorAll('[data-dm]').forEach(b => b.onclick = () => { keep(); editOpen = true; const [k, d] = b.dataset.dm.split(':'); f[k] = Math.max(0, Math.min(31, (Number(f[k]) || 0) + Number(d))); if (!f.manual) f.full = calcFull(); draw(); });
+    const af = document.getElementById('autoFull'); if (af) af.onclick = () => { keep(); editOpen = true; f.manual = false; f.full = calcFull(); draw(); };
     const qty = document.getElementById('qty');
     if (qty) {
       qty.oninput = () => { f.qty = Math.min(31, digits(qty.value)); if (!f.manual) f.full = calcFull(); refresh(); };
@@ -519,7 +546,7 @@ function showRow(empId){
     document.getElementById('save').onclick = async () => {
       keep();
       try {
-        await api('saveRow', { row: { month: S.data.month, empId, type: f.type, rate: f.rate, qty: f.type === 'Месяц' ? '' : f.qty, full: f.full, card: f.card, gross: f.gross, comment: f.comment } }, 'Сохраняю…');
+        await api('saveRow', { row: { month: S.data.month, empId, type: f.type, rate: f.rate, qty: f.type === 'Месяц' ? '' : f.qty, full: f.full, card: f.card, gross: f.gross, comment: f.comment, miss: f.type === 'Месяц' ? f.miss : 0, extra: f.type === 'Месяц' ? f.extra : 0, norm: f.norm } }, 'Сохраняю…');
         await reloadRow(empId);
       } catch (er) { showError(er.code, null, () => showRow(empId)); }
     };

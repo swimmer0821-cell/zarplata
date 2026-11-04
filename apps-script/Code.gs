@@ -47,7 +47,7 @@ function costCat_(x) { const t = s_(x); if (COST_CATS.indexOf(t) >= 0) return t;
 const MONEY_ART_MKT = { type: 'Расход', cat: 'Реклама и продвижение', sub: 'СММ и таргет', pay: 'Наличные' };
 
 const EMP_H = ['ID', 'Имя', 'ФИО (официально)', 'Должность / заметка', 'Способ', 'Ставка', 'На карту (обычно)', 'Работает', 'Комментарий', 'Начислено официально (обычно)', 'Статья затрат'];
-const ROW_H = ['Месяц', 'ID сотрудника', 'Имя', 'Способ', 'Ставка', 'Кол-во смен/дней', 'Полная ЗП', 'На карту', 'Комментарий', 'Изменил', 'Когда', 'Начислено официально'];
+const ROW_H = ['Месяц', 'ID сотрудника', 'Имя', 'Способ', 'Ставка', 'Кол-во смен/дней', 'Полная ЗП', 'На карту', 'Комментарий', 'Изменил', 'Когда', 'Начислено официально', 'Пропущено дней', 'Лишних дней', 'Норма дней (пусто = сама)'];
 const PAY_H = ['ID', 'Месяц', 'ID сотрудника', 'Дата', 'Вид', 'Сумма', 'Комментарий', 'Кто', 'Когда', 'Статус'];
 const USER_H = ['Пользователь', 'PIN'];
 
@@ -162,7 +162,8 @@ function readRows_() {
     row: i + 2, month: monthKey_(r[0]), empId: s_(r[1]), name: s_(r[2]), type: s_(r[3]) || 'Месяц', rate: n_(r[4]),
     qty: r[5] === '' || r[5] === null ? '' : n_(r[5]), full: n_(r[6]), card: n_(r[7]), comment: s_(r[8]),
     by: s_(r[9]), at: r[10] instanceof Date ? fmtDT_(r[10]) : s_(r[10]),
-    gross: r[11] === '' || r[11] === undefined || r[11] === null ? Math.round(n_(r[7]) / (1 - TAX)) : Math.round(n_(r[11]))
+    gross: r[11] === '' || r[11] === undefined || r[11] === null ? Math.round(n_(r[7]) / (1 - TAX)) : Math.round(n_(r[11])),
+    miss: n_(r[12]), extra: n_(r[13]), norm: r[14] === '' || r[14] === undefined || r[14] === null ? '' : n_(r[14])
   })).filter(x => x.month && x.empId);
 }
 function readPays_() {
@@ -239,7 +240,10 @@ function saveRow_(user, x) {
   const qty = x.qty === '' || x.qty === null || x.qty === undefined ? '' : Number(String(x.qty).replace(',', '.'));
   if (qty !== '' && (!isFinite(qty) || qty < 0 || qty > 31)) throw new Error('ERR_QTY');
   const gross = x.gross === undefined || x.gross === null || x.gross === '' ? r.gross : money_(x.gross);
-  sheet_(SH_ROWS).getRange(r.row, 4, 1, 9).setValues([[type, rate, qty, full, card, safe_(x.comment, 300), user.name, new Date(), gross]]);
+  const days = (v, def) => { if (v === undefined || v === null || v === '') return def; const d = Number(String(v).replace(',', '.')); if (!isFinite(d) || d < 0 || d > 31) throw new Error('ERR_QTY'); return d; };
+  const miss = days(x.miss, r.miss), extra = days(x.extra, r.extra);
+  const norm = x.norm === '' ? '' : days(x.norm, r.norm);
+  sheet_(SH_ROWS).getRange(r.row, 4, 1, 12).setValues([[type, rate, qty, full, card, safe_(x.comment, 300), user.name, new Date(), gross, miss, extra, norm]]);
   return { ok: true };
 }
 
@@ -292,7 +296,7 @@ function newMonth_(user, m) {
   const out = readEmps_().filter(e => e.active).map(e => {
     const qty = e.type === 'Месяц' ? '' : 0;
     const full = e.type === 'Месяц' ? e.rate : 0;
-    return ["'" + m, e.id, e.name, e.type, e.rate, qty, full, e.card, '', user.name, now, e.gross];
+    return ["'" + m, e.id, e.name, e.type, e.rate, qty, full, e.card, '', user.name, now, e.gross, 0, 0, ''];
   });
   if (!out.length) throw new Error('ERR_NO_EMPS');
   const sh = sheet_(SH_ROWS);
