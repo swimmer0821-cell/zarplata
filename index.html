@@ -17,104 +17,141 @@ const CONFIG = {
 </script>
 <style>
 :root{
-  --bg:#ffffff; --ink:#0f1a1e; --muted:#4a5a60; --line:#b9c4c8; --soft:#eef2f3;
-  --bar:#14313a; --bar-ink:#ffffff;
-  --card:#2c4d73; --card-bg:#e6edf6; --cash:#156b34; --cash-bg:#e2f4e8;
-  --red:#a4161a; --red-bg:#fde9e8; --warn:#7a4b00; --warn-bg:#fff1cc;
-  --focus:#f2b705; --r:14px; color-scheme:light;
+  --bg:#f2f4f6; --surf:#ffffff; --ink:#111b20; --muted:#5b6b72; --line:#dde3e7; --soft:#eef2f4;
+  --acc:#14313a; --acc-ink:#ffffff;
+  --card:#2a5b8f; --card-bg:#e8f0f9; --cash:#17723a; --cash-bg:#e4f5ea;
+  --red:#b3261e; --red-bg:#fdecea; --warn:#8a5300; --warn-bg:#fff3d6;
+  --g1:#d9822b; --g2:#3a7bd5; --g3:#8e5bd0; --g4:#2e9e6a; --g5:#d6455d;
+  --focus:#f2b705; --r:18px; color-scheme:light;
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{margin:0}
-body{background:var(--bg);color:var(--ink);font:400 18px/1.4 Roboto,"Segoe UI",system-ui,-apple-system,sans-serif;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--ink);font:400 17px/1.4 Roboto,"Segoe UI",system-ui,-apple-system,sans-serif;-webkit-tap-highlight-color:transparent}
 button,input,textarea,select{font:inherit;color:inherit}
 button{cursor:pointer}
-:focus-visible{outline:4px solid var(--focus);outline-offset:2px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 .num{font-variant-numeric:tabular-nums;white-space:nowrap}
-.top{position:sticky;top:0;z-index:5;background:var(--bar);color:var(--bar-ink);display:flex;align-items:center;gap:12px;padding:10px 16px;padding-top:calc(10px + env(safe-area-inset-top,0px));min-height:64px}
-.top h1{font-size:20px;margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tbtn{background:transparent;border:2px solid rgba(255,255,255,.6);color:var(--bar-ink);border-radius:10px;min-height:46px;padding:6px 14px;font-weight:600;font-size:16px}
-main{padding:16px;padding-bottom:calc(32px + env(safe-area-inset-bottom,0px));max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
-h2{font-size:23px;margin:4px 0 0} h3{font-size:18px;margin:6px 0 0;color:var(--muted)}
-.hint{color:var(--muted);font-size:16px;margin:0}
-.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
-.tile{border:2px solid var(--line);background:var(--bg);border-radius:var(--r);min-height:80px;padding:12px 14px;text-align:left;font-size:19px;font-weight:600}
-.display{border:3px solid var(--line);border-radius:var(--r);padding:12px;font-size:36px;font-weight:700;text-align:center;letter-spacing:.4em;background:var(--soft)}
-.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:420px}
-.key{min-height:66px;border:2px solid var(--line);border-radius:12px;background:var(--bg);font-size:28px;font-weight:600}
-.key.wide{font-size:18px}
-.btn{min-height:60px;padding:10px 20px;border-radius:var(--r);border:3px solid var(--ink);background:var(--ink);color:var(--bg);font-size:19px;font-weight:700;flex:1 1 200px}
-.btn.ghost{background:var(--bg);color:var(--ink)}
-.btn.card{background:var(--card);border-color:var(--card)} .btn.cash{background:var(--cash);border-color:var(--cash)}
-.btn.small{min-height:50px;font-size:17px;flex:0 1 auto}
-.btn:disabled{background:var(--soft);color:var(--muted);border-color:var(--line)}
-.actions{display:flex;flex-wrap:wrap;gap:12px}
-.warn{background:var(--warn-bg);color:var(--warn);border:2px solid var(--warn);border-radius:12px;padding:12px 14px;font-weight:600}
-.bad{background:var(--red-bg);color:var(--red);border:2px solid var(--red);border-radius:12px;padding:14px;font-weight:600}
-.ok{background:var(--cash-bg);color:var(--cash);border:2px solid var(--cash);border-radius:12px;padding:14px;font-weight:600}
-.loader{position:fixed;inset:0;background:rgba(15,26,30,.45);display:flex;align-items:center;justify-content:center;z-index:20}
-.loader div{background:var(--bg);border-radius:var(--r);padding:22px 30px;display:flex;align-items:center;gap:16px;font-size:20px;font-weight:600}
-.spin{width:34px;height:34px;border:5px solid var(--soft);border-top-color:var(--ink);border-radius:50%;animation:sp 1s linear infinite}
+.top{position:sticky;top:0;z-index:5;background:var(--acc);color:var(--acc-ink);display:flex;align-items:center;gap:10px;padding:8px 12px;padding-top:calc(8px + env(safe-area-inset-top,0px));min-height:58px}
+.top h1{font-size:19px;margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tbtn{background:rgba(255,255,255,.12);border:0;color:var(--acc-ink);border-radius:12px;min-height:44px;padding:6px 14px;font-weight:600;font-size:16px}
+main{padding:14px 14px calc(28px + env(safe-area-inset-bottom,0px));max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+h2{font-size:22px;margin:2px 0 0} h3{font-size:15px;margin:8px 4px 0;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+.hint{color:var(--muted);font-size:15px;margin:0}
+.panel{background:var(--surf);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.tile{border:1px solid var(--line);background:var(--surf);border-radius:var(--r);min-height:76px;padding:12px 14px;text-align:left;font-size:18px;font-weight:600}
+.display{border:1px solid var(--line);border-radius:var(--r);padding:12px;font-size:34px;font-weight:700;text-align:center;letter-spacing:.4em;background:var(--surf)}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:400px}
+.key{min-height:64px;border:1px solid var(--line);border-radius:16px;background:var(--surf);font-size:26px;font-weight:600}
+.key.wide{font-size:17px}
+.btn{min-height:54px;padding:10px 18px;border-radius:16px;border:0;background:var(--acc);color:var(--acc-ink);font-size:17px;font-weight:700;flex:1 1 160px}
+main>.btn{flex:0 0 auto}
+.btn.ghost{background:var(--surf);color:var(--ink);border:1px solid var(--line)}
+.btn.card{background:var(--card)} .btn.cash{background:var(--cash)}
+.btn.small{min-height:46px;font-size:16px;flex:0 1 auto}
+.btn:disabled{background:var(--soft);color:var(--muted)}
+.actions{display:flex;flex-wrap:wrap;gap:10px}
+.warn{background:var(--warn-bg);color:var(--warn);border-radius:14px;padding:10px 14px;font-weight:600;font-size:15px}
+.bad{background:var(--red-bg);color:var(--red);border-radius:14px;padding:14px;font-weight:600}
+.loader{position:fixed;inset:0;background:rgba(17,27,32,.35);display:flex;align-items:center;justify-content:center;z-index:20}
+.loader div{background:var(--surf);border-radius:var(--r);padding:20px 28px;display:flex;align-items:center;gap:14px;font-size:18px;font-weight:600}
+.spin{width:30px;height:30px;border:4px solid var(--soft);border-top-color:var(--acc);border-radius:50%;animation:sp 1s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 
 /* Месяц */
-.mnav{display:flex;align-items:center;gap:10px}
-.mnav h2{flex:1;text-align:center;margin:0}
-.mnav button{min-width:60px;min-height:56px;border:2px solid var(--line);border-radius:12px;background:var(--bg);font-size:26px;font-weight:700}
+.mnav{display:flex;align-items:center;gap:8px;background:var(--surf);border:1px solid var(--line);border-radius:999px;padding:4px}
+.mnav h2{flex:1;text-align:center;margin:0;font-size:19px}
+.mnav button{width:48px;height:44px;border:0;border-radius:999px;background:var(--soft);font-size:24px;font-weight:700}
 .mnav button:disabled{opacity:.3}
-.sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
-.box{border:2px solid var(--line);border-radius:var(--r);padding:12px 14px}
-.box span{display:block;font-size:15px;color:var(--muted);font-weight:600}
-.box b{display:block;font-size:24px}
-.box small{display:block;font-size:14px;color:var(--muted)}
-.box.card{border-color:var(--card);background:var(--card-bg)} .box.card b{color:var(--card)}
-.box.cash{border-color:var(--cash);background:var(--cash-bg)} .box.cash b{color:var(--cash)}
-.cost{border:2px solid var(--line);border-radius:var(--r);padding:12px 14px;margin:0 0 14px}
-.cost .ttl{display:block;font-size:17px}.cost>small{display:block;color:var(--muted);font-size:14px;margin-bottom:6px}
-.cost table{width:100%;border-collapse:collapse;font-size:15px}.cost td{padding:6px 0;border-bottom:1px solid var(--line);vertical-align:top}
-.cost td.num{text-align:right;white-space:nowrap;padding-left:8px}.cost td small{color:var(--muted);font-size:13px}
-.cost tr.tot td{font-weight:700;border-bottom:2px solid var(--ink)}.cost tr.all td{font-size:17px;border-bottom:none}
-.grp{display:flex;justify-content:space-between;font-weight:700;color:var(--muted);font-size:14px;margin:10px 2px 2px;text-transform:uppercase}
-.box.left{border-color:var(--warn);background:var(--warn-bg)} .box.left b{color:var(--warn)}
-.search{width:100%;min-height:54px;border:2px solid var(--line);border-radius:12px;padding:8px 14px;font-size:18px}
-.list{display:flex;flex-direction:column;gap:10px}
-.emp{border:2px solid var(--line);border-radius:var(--r);padding:12px 14px;background:var(--bg);text-align:left;display:grid;grid-template-columns:1fr auto;gap:2px 12px;width:100%}
-.emp .n{font-weight:700;font-size:19px;min-width:0;overflow-wrap:anywhere}
-.emp .f{font-weight:800;font-size:20px;text-align:right}
-.emp .d{grid-column:1/-1;font-size:15px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 14px}
-.c-card{color:var(--card)} .c-cash{color:var(--cash)} .c-red{color:var(--red)} .c-warn{color:var(--warn)}
-.tag{display:inline-block;border-radius:999px;padding:2px 10px;font-size:14px;font-weight:700;background:var(--warn-bg);color:var(--warn)}
-.tag.done{background:var(--cash-bg);color:var(--cash)}
-.tag.chk{background:var(--red-bg);color:var(--red)}
+.hero{background:var(--acc);color:var(--acc-ink);border-radius:var(--r);padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+.hero .lbl{font-size:14px;opacity:.8;font-weight:600}
+.hero .big{font-size:32px;font-weight:800;line-height:1.1}
+.bar{height:8px;border-radius:99px;background:rgba(255,255,255,.18);overflow:hidden}
+.bar i{display:block;height:100%;background:#7fd6a0;border-radius:99px}
+.hero .row{display:flex;flex-wrap:wrap;gap:8px}
+.hg{display:grid;grid-template-columns:1fr 1fr;gap:8px}.hg div{background:rgba(255,255,255,.1);border-radius:12px;padding:8px 12px}.hg span{display:block;font-size:13px;opacity:.8}.hg b{font-size:18px}
+.pill{border-radius:999px;padding:5px 12px;font-size:14px;font-weight:600;background:rgba(255,255,255,.12)}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--soft);border-radius:14px;padding:4px;gap:4px}
+.seg button{min-height:44px;border:0;border-radius:11px;background:transparent;font-weight:700;font-size:16px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surf);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.search{width:100%;min-height:50px;border:1px solid var(--line);border-radius:14px;padding:8px 14px;font-size:17px;background:var(--surf)}
+.fl{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.fl::-webkit-scrollbar{display:none}
+.fl button{flex:0 0 auto;min-height:40px;padding:6px 14px;border:1px solid var(--line);border-radius:999px;background:var(--surf);font-size:15px;font-weight:600;white-space:nowrap}
+.fl button[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.list{background:var(--surf);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.ghead{display:flex;justify-content:space-between;align-items:center;padding:10px 16px 6px;font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;background:var(--soft)}
+.emp{display:flex;align-items:center;gap:12px;width:100%;padding:10px 16px;border:0;border-top:1px solid var(--line);background:var(--surf);text-align:left;min-height:64px}
+.ghead+.emp{border-top:0}
+.av{flex:0 0 40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:15px}
+.emp .m{flex:1;min-width:0}
+.emp .n{display:block;font-weight:700;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.emp .s{display:block;font-size:14px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.emp .r{text-align:right}
+.emp .f{display:block;font-weight:800;font-size:17px}
+.st{display:block;font-size:13px;font-weight:700}
+.st.left{color:var(--warn)} .st.done{color:var(--cash)} .st.chk{color:var(--red)}
+.c-card{color:var(--card)} .c-cash{color:var(--cash)} .c-red{color:var(--red)}
+.cost table{width:100%;border-collapse:collapse;font-size:16px}
+.cost td{padding:9px 0;border-bottom:1px solid var(--line);vertical-align:top}
+.cost td.num{text-align:right;padding-left:8px}
+.cost td small{display:block;color:var(--muted);font-size:13px}
+.cost tr.tot td{font-weight:800;border-bottom:2px solid var(--ink)}
+.cost tr.all td{font-size:18px;border-bottom:0}
+.kv{display:grid;grid-template-columns:1fr auto;gap:6px 12px;font-size:16px}
+.kv span:nth-child(even){text-align:right;font-weight:700}
+.menu{display:flex;flex-direction:column}
+.menu button{display:flex;justify-content:space-between;align-items:center;width:100%;min-height:56px;padding:10px 16px;border:0;border-top:1px solid var(--line);background:var(--surf);font-size:17px;font-weight:600;text-align:left}
+.menu button:first-child{border-top:0}
+.menu button:disabled{color:var(--muted)}
+.menu button::after{content:"›";font-size:22px;color:var(--muted)}
 
-/* Карточка сотрудника */
-.form{display:grid;gap:14px}
-@media (min-width:700px){.form.two{grid-template-columns:1fr 1fr}}
+/* Сотрудник */
+.head{display:flex;align-items:center;gap:14px}
+.head .av{flex-basis:52px;height:52px;font-size:18px}
+.head h2{margin:0;font-size:21px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.stats div{background:var(--soft);border-radius:14px;padding:8px 10px}
+.stats span{display:block;font-size:13px;color:var(--muted);font-weight:600}
+.stats b{display:block;font-size:16px}
+.stats .k1{background:var(--card-bg)} .stats .k1 b{color:var(--card)}
+.stats .k2{background:var(--cash-bg)} .stats .k2 b{color:var(--cash)}
+.stats .k3{background:var(--warn-bg)} .stats .k3 b{color:var(--warn)}
+.fullsum{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px}
+.fullsum b{font-size:26px}
+.form{display:grid;gap:12px}
+@media (min-width:640px){.form.two{grid-template-columns:1fr 1fr}}
 .field{display:flex;flex-direction:column;gap:6px}
-.label{font-weight:700;font-size:17px} .label em{font-style:normal;font-weight:400;color:var(--muted)}
-.txt{width:100%;min-height:56px;border:2px solid var(--line);border-radius:12px;padding:8px 14px;font-size:20px;background:var(--bg)}
+.label{font-weight:700;font-size:15px} .label em{font-style:normal;font-weight:400;color:var(--muted)}
+.txt{width:100%;min-height:52px;border:1px solid var(--line);border-radius:14px;padding:8px 14px;font-size:18px;background:var(--surf)}
 .txt.money{text-align:right;font-weight:700}
-textarea.txt{min-height:80px;font-size:18px}
-.chips{display:flex;flex-wrap:wrap;gap:10px}
-.chip{min-height:52px;padding:8px 16px;border:2px solid var(--line);border-radius:12px;background:var(--bg);font-size:17px;font-weight:600}
-.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.stepper{display:flex;align-items:center;gap:10px}
-.stepper button{width:60px;height:56px;border:2px solid var(--line);border-radius:12px;background:var(--bg);font-size:28px;font-weight:700}
-.stepper .txt{width:7em;text-align:center}
-.calc{border:2px solid var(--line);border-radius:var(--r);overflow:hidden}
-.calc div{display:flex;justify-content:space-between;gap:12px;padding:10px 14px;border-bottom:1px solid var(--soft)}
+textarea.txt{min-height:70px;font-size:16px}
+select.txt{appearance:auto}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:46px;padding:6px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surf);font-size:16px;font-weight:600}
+.chip[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.stepper{display:flex;align-items:center;gap:8px}
+.stepper button{width:54px;height:52px;border:1px solid var(--line);border-radius:14px;background:var(--surf);font-size:26px;font-weight:700}
+.stepper .txt{width:6em;text-align:center}
+.calc{border-radius:14px;overflow:hidden;background:var(--soft)}
+.calc div{display:flex;justify-content:space-between;gap:12px;padding:9px 14px;border-bottom:1px solid var(--surf);font-size:15px}
 .calc div:last-child{border-bottom:0}
-.calc .t{font-weight:800;font-size:20px}
-.calc .cardrow{background:var(--card-bg)} .calc .cashrow{background:var(--cash-bg)}
-details{border:2px dashed var(--line);border-radius:12px;padding:10px 14px}
-summary{font-weight:700;cursor:pointer;min-height:36px}
-.pays{display:flex;flex-direction:column;gap:8px}
-.pay{display:flex;align-items:center;gap:10px;border:2px solid var(--soft);border-radius:12px;padding:8px 12px}
+.calc .t{font-weight:800;font-size:17px}
+details.panel{padding:0}
+details.panel>summary{list-style:none;display:flex;justify-content:space-between;align-items:center;min-height:56px;padding:10px 16px;font-weight:700;font-size:17px;cursor:pointer}
+details.panel>summary::-webkit-details-marker{display:none}
+details.panel>summary::after{content:"›";font-size:22px;color:var(--muted);transition:transform .15s}
+details.panel[open]>summary::after{transform:rotate(90deg)}
+details.panel>.in{padding:0 16px 16px;display:flex;flex-direction:column;gap:12px}
+.pays{display:flex;flex-direction:column}
+.pay{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.pay:first-child{border-top:0}
 .pay .w{flex:1;min-width:0} .pay .w small{display:block;color:var(--muted);font-size:14px}
 .pay.off{opacity:.5;text-decoration:line-through}
-.pay button{min-height:44px;border:2px solid var(--line);border-radius:10px;background:var(--bg);padding:4px 12px;font-size:15px;font-weight:600}
-.dlg{border:3px solid var(--ink);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:12px;background:var(--soft)}
-.stamp{color:var(--muted);font-size:14px}
+.pay button{min-height:40px;border:1px solid var(--line);border-radius:10px;background:var(--surf);padding:4px 12px;font-size:14px;font-weight:600}
+.dlg{border:2px solid var(--acc);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:12px;background:var(--surf)}
+.stamp{color:var(--muted);font-size:13px;margin:0}
 </style>
 </head>
 <body>
@@ -240,32 +277,48 @@ async function openMonth(m){
   catch (e) { return showError(e.code, () => openMonth(m)); }
   showMonth();
 }
-function leftTag(r){
+function needCheck(r){ return (r.comment && /сверить|уточнить/i.test(r.comment)) || /сверить|уточнить/i.test(empOf(r.empId).comment || ''); }
+function status(r){
   const l = r.leftCard + r.leftCash;
-  if (r.comment && /сверить|уточнить/i.test(r.comment) || /сверить|уточнить/i.test(empOf(r.empId).comment || '')) return '<span class="tag chk">проверить</span>';
-  if (l <= 0) return '<span class="tag done">выдано</span>';
-  return `<span class="tag">осталось ${money(l)}</span>`;
+  if (needCheck(r)) return { k: 'chk', t: 'проверить' };
+  if (l <= 0) return { k: 'done', t: 'выдано' };
+  return { k: 'left', t: 'осталось ' + money(l) };
 }
 function empOf(id){ return (S.ref.emps || []).find(e => e.id === id) || {}; }
 // Статьи затрат: первые две — чистая (производственная) себестоимость
 const CATS = ['Операторы и механики', 'Производственный персонал', 'Администрация', 'Логистика', 'Маркетинг'];
+const SHORT = { 'Операторы и механики': 'Операторы', 'Производственный персонал': 'Цех', 'Администрация': 'Администрация', 'Логистика': 'Логистика', 'Маркетинг': 'Маркетинг' };
 const PROD = ['Операторы и механики', 'Производственный персонал'];
 function catOf(x) { return CATS.indexOf(x) >= 0 ? x : 'Производственный персонал'; }
+function av(name, cat){ const i = CATS.indexOf(catOf(cat)) + 1; const w = String(name || '?').trim().split(/\s+/); const t = (w[0][0] || '?') + (w[1] && /[A-ZА-ЯЁ]/i.test(w[1][0]) ? w[1][0] : ''); return `<span class="av" style="background:var(--g${i})" aria-hidden="true">${esc(t.toUpperCase())}</span>`; }
 function groupRows(rows) {
   return CATS.map(c => { const l = rows.filter(r => catOf(r.cat) === c); return { cat: c, rows: l, full: l.reduce((a, r) => a + (Number(r.full) || 0), 0) }; }).filter(g => g.rows.length);
 }
 function costTable(t) {
   const by = t.byCat || [];
-  const line = (x) => `<tr><td>${esc(x.cat)} <small>${x.people} чел.</small></td><td class="num">${money(x.cost)}</td></tr>`;
-  return `<div class="cost">
-    <b class="ttl">Затраты на персонал по статьям</b>
-    <small>Затраты = полная ЗП + налоги 24% с официальной части (всего налогов ${money(t.tax + t.soc)})</small>
+  const line = (x) => `<tr><td>${esc(x.cat)}<small>${x.people} чел.</small></td><td class="num">${money(x.cost)}</td></tr>`;
+  return `<div class="panel cost">
     <table>
       ${by.filter(x => x.prod).map(line).join('')}
-      <tr class="tot"><td>Чистая себестоимость<br><small>производство: операторы, механики, цех</small></td><td class="num">${money(t.costProd)}</td></tr>
+      <tr class="tot"><td>Чистая себестоимость<small>производство: операторы, механики, цех</small></td><td class="num">${money(t.costProd)}</td></tr>
       ${by.filter(x => !x.prod).map(line).join('')}
-      <tr class="tot all"><td>Полная себестоимость<br><small>со всеми расходами: + администрация, логистика, маркетинг</small></td><td class="num">${money(t.costFull)}</td></tr>
-    </table></div>`;
+      <tr class="tot all"><td>Полная себестоимость<small>+ администрация, логистика, маркетинг</small></td><td class="num">${money(t.costFull)}</td></tr>
+    </table></div>
+    <div class="panel"><div class="kv">
+      <span>Фонд зарплаты (на руки)</span><span class="num">${money(t.full)}</span>
+      <span class="c-card">в т.ч. на карту</span><span class="num c-card">${money(t.card)}</span>
+      <span class="c-cash">в т.ч. наличными</span><span class="num c-cash">${money(t.cash)}</span>
+      <span>Начислено официально</span><span class="num">${money(t.gross)}</span>
+      <span>НДФЛ 12% (удерживается)</span><span class="num">${money(t.tax)}</span>
+      <span>Налог 12% (платит компания)</span><span class="num">${money(t.soc)}</span>
+      <span><b>Затраты всего</b></span><span class="num">${money(t.costFull)}</span>
+    </div><p class="hint" style="margin-top:10px">Затраты = на руки + налоги 24% с официальной части. С наличных налогов нет.</p></div>`;
+}
+function empRow(r){
+  const st = status(r), e = empOf(r.empId);
+  return `<button class="emp" type="button" data-id="${esc(r.empId)}">${av(r.name, r.cat)}
+    <span class="m"><span class="n">${esc(r.name)}</span><span class="s">${esc([e.role, r.type !== 'Месяц' ? (r.qty || 0) + (r.type === 'Смена' ? ' смен' : ' дн.') : ''].filter(Boolean).join(' · ') || SHORT[catOf(r.cat)])}</span></span>
+    <span class="r"><span class="f num">${money(r.full)}</span><span class="st ${st.k}">${esc(st.t)}</span></span></button>`;
 }
 function showMonth(){
   const ms = S.ref.months, m = S.month, d = S.data;
@@ -273,7 +326,6 @@ function showMonth(){
   const nav = `<div class="mnav"><button type="button" id="mPrev" aria-label="Прошлый месяц" ${i <= 0 && (!last || m <= ms[0]) ? 'disabled' : ''}>‹</button>
     <h2>${esc(mName(m))}</h2><button type="button" id="mNext" aria-label="Следующий месяц" ${!last || m >= last ? 'disabled' : ''}>›</button></div>`;
   const nextM = last ? mShift(last, 1) : m;
-  const canOpen = !d || m === last;
   if (!d) {
     screen('Зарплата', `${nav}<div class="warn">${esc(mName(m))} ещё не открыт.</div>
       <div class="actions"><button class="btn" id="mOpen" type="button">Открыть ${esc(mName(m))}</button>
@@ -282,48 +334,61 @@ function showMonth(){
     document.getElementById('mEmps').onclick = showEmps; return;
   }
   const t = d.total, q = S.q.trim().toLowerCase();
-  const rows = d.rows.filter(r => !q || (r.name + ' ' + (empOf(r.empId).fio || '')).toLowerCase().includes(q));
-  const prevT = S.prevTotal && S.prevTotal.month === mShift(m, -1) ? S.prevTotal : null;
-  const diff = prevT ? t.full - prevT.full : null;
+  const owe = t.full + (t.prevCard || 0) + (t.prevCash || 0);
+  const left = Math.max(0, t.leftCard + t.leftCash), paid = t.paidCard + t.paidCash;
+  const pct = owe > 0 ? Math.min(100, Math.round(paid / (paid + left || 1) * 100)) : 0;
+  const tab = S.tab || 'people', fs = S.fs || 'all', fg = S.fg || 'all';
+  const cnt = { all: d.rows.length, left: d.rows.filter(r => status(r).k === 'left').length, done: d.rows.filter(r => status(r).k === 'done').length, chk: d.rows.filter(r => status(r).k === 'chk').length };
+  const rows = d.rows.filter(r => (!q || (r.name + ' ' + (empOf(r.empId).fio || '') + ' ' + (empOf(r.empId).role || '')).toLowerCase().includes(q))
+    && (fs === 'all' || status(r).k === fs) && (fg === 'all' || catOf(r.cat) === fg));
+  const fbtn = (k, txt, n) => `<button type="button" data-fs="${k}" aria-pressed="${fs === k}">${txt}${n != null ? ' ' + n : ''}</button>`;
+  const people = `
+    <input class="search" id="q" type="search" placeholder="Найти сотрудника" value="${esc(S.q)}" aria-label="Найти сотрудника">
+    <div class="fl" role="group" aria-label="Статус">${fbtn('all', 'Все', cnt.all)}${fbtn('left', 'Не выдано', cnt.left)}${fbtn('done', 'Выдано', cnt.done)}${cnt.chk ? fbtn('chk', 'Проверить', cnt.chk) : ''}</div>
+    <div class="fl" role="group" aria-label="Группа"><button type="button" data-fg="all" aria-pressed="${fg === 'all'}">Все группы</button>${CATS.map(c => `<button type="button" data-fg="${esc(c)}" aria-pressed="${fg === c}">${esc(SHORT[c])}</button>`).join('')}</div>
+    ${rows.length ? `<div class="list">${groupRows(rows).map(g => `<div class="ghead"><span>${esc(g.cat)} · ${g.rows.length}</span><span class="num">${money(g.full)}</span></div>` + g.rows.map(empRow).join('')).join('')}</div>`
+      : '<p class="hint">Никого не найдено.</p>'}`;
   screen('Зарплата', `${nav}
-    <div class="sum">
-      <div class="box"><span>Фонд зарплаты</span><b class="num">${money(t.full)}</b><small>${t.people} чел.${diff !== null ? ' · к прошлому: ' + (diff > 0 ? '+' : '') + money(diff) : ''}</small></div>
-      <div class="box card"><span>На карту</span><b class="num">${money(t.card)}</b><small>налог 12%: ${money(t.tax)}</small></div>
-      <div class="box cash"><span>Наличными</span><b class="num">${money(t.cash)}</b></div>
-      <div class="box left"><span>Осталось выдать</span><b class="num">${money(t.leftCard + t.leftCash)}</b><small>карта ${money(t.leftCard)} · нал ${money(t.leftCash)}</small></div>
+    <div class="hero">
+      <div><div class="lbl">Осталось выдать</div><div class="big num">${money(left)}</div></div>
+      <div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div>
+      <div class="hg"><div><span>На карту</span><b class="num">${money(Math.max(0, t.leftCard))}</b></div><div><span>Наличными</span><b class="num">${money(Math.max(0, t.leftCash))}</b></div></div>
+      <div class="lbl num">Выдано ${money(paid)} · фонд ${money(t.full)} · ${t.people} чел.</div>
     </div>
-    ${costTable(t)}
-    <input class="search" id="q" type="search" placeholder="Поиск по имени" value="${esc(S.q)}" aria-label="Поиск по имени">
-    <div class="list">${rows.length ? groupRows(rows).map(g => `<div class="grp"><span>${esc(g.cat)}</span><span class="num">${money(g.full)}</span></div>` + g.rows.map(r => `<button class="emp" type="button" data-id="${esc(r.empId)}">
-        <span class="n">${esc(r.name)}</span><span class="f num">${money(r.full)}</span>
-        <span class="d"><span class="c-card num">карта ${money(r.card)}</span><span class="c-cash num">нал ${money(r.cash)}</span>
-        ${r.type !== 'Месяц' ? `<span>${esc(r.qty || 0)} ${r.type === 'Смена' ? 'смен' : 'дн.'}</span>` : ''}${leftTag(r)}</span></button>`).join('')).join('')
-      : '<p class="hint">Никого не найдено.</p>'}</div>
-    <div class="actions">
-      ${m === last ? `<button class="btn" id="mOpen" type="button">Открыть ${esc(mName(nextM))}</button>` : ''}
-      <button class="btn ghost" id="mEmps" type="button">Сотрудники</button>
-    </div>
-    <details><summary>Выдать всем сразу</summary>
-      <p class="hint">Запишет выплату на весь остаток каждому сотруднику, сегодняшней датой. Наличные сразу попадут в «Деньги».</p>
-      <div class="actions"><button class="btn card small" id="allCard" type="button" ${t.leftCard > 0 ? '' : 'disabled'}>Всем на карту: ${money(Math.max(0, t.leftCard))}</button>
-      <button class="btn cash small" id="allCash" type="button" ${t.leftCash > 0 ? '' : 'disabled'}>Всем наличными: ${money(Math.max(0, t.leftCash))}</button></div>
-      <div id="allAsk"></div>
-    </details>`);
+    <div class="seg" role="group" aria-label="Раздел"><button type="button" data-tab="people" aria-pressed="${tab === 'people'}">Сотрудники</button><button type="button" data-tab="cost" aria-pressed="${tab === 'cost'}">Затраты</button></div>
+    ${tab === 'people' ? people : costTable(t)}
+    <div class="panel" style="padding:0"><div class="menu">
+      <button type="button" id="mEmps">Список и оклады сотрудников</button>
+      <button type="button" id="mAll" ${left > 0 ? '' : 'disabled'}>Выдать всем сразу</button>
+      ${m === last ? `<button type="button" id="mOpen">Открыть ${esc(mName(nextM))}</button>` : ''}
+    </div></div>
+    <div id="allAsk"></div>`);
   bindNav();
+  $app.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { S.tab = b.dataset.tab; showMonth(); });
+  $app.querySelectorAll('[data-fs]').forEach(b => b.onclick = () => { S.fs = b.dataset.fs; showMonth(); });
+  $app.querySelectorAll('[data-fg]').forEach(b => b.onclick = () => { S.fg = b.dataset.fg; showMonth(); });
   const qi = document.getElementById('q');
-  qi.oninput = () => { S.q = qi.value; const pos = qi.selectionStart; showMonth(); const n = document.getElementById('q'); n.focus(); n.setSelectionRange(pos, pos); };
+  if (qi) qi.oninput = () => { S.q = qi.value; const pos = qi.selectionStart; showMonth(); const n = document.getElementById('q'); n.focus(); n.setSelectionRange(pos, pos); };
   $app.querySelectorAll('[data-id]').forEach(b => b.onclick = () => showRow(b.dataset.id));
   if (document.getElementById('mOpen')) document.getElementById('mOpen').onclick = () => openNew(nextM);
   document.getElementById('mEmps').onclick = showEmps;
-  [['allCard', 'Карта'], ['allCash', 'Наличные']].forEach(([id, kind]) => document.getElementById(id).onclick = () => {
+  document.getElementById('mAll').onclick = () => {
     const box = document.getElementById('allAsk');
-    box.innerHTML = `<div class="dlg"><b>Записать, что всем выдано (${kind === 'Карта' ? 'на карту' : 'наличными'})?</b>
-      <div class="actions"><button class="btn" id="allYes" type="button">Да, записать</button><button class="btn ghost" id="allNo" type="button">Нет</button></div></div>`;
+    box.innerHTML = `<div class="dlg"><b>Выдать всем остаток</b><p class="hint">Запишет выплату на весь остаток каждому сотруднику, сегодняшней датой. Наличные сразу попадут в «Деньги».</p>
+      <div class="actions"><button class="btn card" id="allCard" type="button" ${t.leftCard > 0 ? '' : 'disabled'}>На карту: ${money(Math.max(0, t.leftCard))}</button>
+      <button class="btn cash" id="allCash" type="button" ${t.leftCash > 0 ? '' : 'disabled'}>Наличными: ${money(Math.max(0, t.leftCash))}</button></div>
+      <button class="btn ghost" id="allNo" type="button">Отмена</button><div id="allYesBox"></div></div>`;
+    box.scrollIntoView({ block: 'center' });
     document.getElementById('allNo').onclick = () => { box.innerHTML = ''; };
-    document.getElementById('allYes').onclick = async () => {
-      try { await api('payAll', { month: m, kind }, 'Записываю…'); await openMonth(m); } catch (e) { showError(e.code, null, showMonth); }
-    };
-  });
+    [['allCard', 'Карта'], ['allCash', 'Наличные']].forEach(([id, kind]) => document.getElementById(id).onclick = () => {
+      const y = document.getElementById('allYesBox');
+      y.innerHTML = `<b>Точно записать, что всем выдано ${kind === 'Карта' ? 'на карту' : 'наличными'}?</b>
+        <div class="actions" style="margin-top:8px"><button class="btn" id="allYes" type="button">Да, записать</button></div>`;
+      document.getElementById('allYes').onclick = async () => {
+        try { await api('payAll', { month: m, kind }, 'Записываю…'); await openMonth(m); } catch (e) { showError(e.code, null, showMonth); }
+      };
+    });
+  };
 }
 function bindNav(){
   const ms = S.ref.months;
@@ -344,64 +409,77 @@ function showRow(empId){
   const pays = S.data.pays.filter(p => p.empId === empId);
   const calcFull = () => f.type === 'Месяц' ? f.rate : Math.round(f.rate * (Number(f.qty) || 0));
   f.manual = r.full !== calcFull();
-  const calcHtml = () => { const full = f.full, cash = Math.max(0, full - f.card), gross = f.gross, ndfl = Math.round(gross * 0.12), soc = Math.round(gross * 0.12); return `<div class="calc">
-        <div class="cardrow"><span>На карту</span><span class="num">${money(f.card)}</span></div>
-        <div class="cashrow"><span>Наличными</span><span class="num">${money(cash)}</span></div>
-        <div><span>Затраты (${esc(catOf(e.cat))}${PROD.indexOf(catOf(e.cat)) >= 0 ? ', в чистую себестоимость' : ''}): полная + налоги 24%</span><span class="num">${money(full + ndfl + soc)}</span></div>
+  let editOpen = false;
+  const calcHtml = () => { const full = f.full, cash = Math.max(0, full - f.card); return `<div class="calc">
+        <div><span class="c-card">На карту</span><span class="num c-card">${money(f.card)}</span></div>
+        <div><span class="c-cash">Наличными</span><span class="num c-cash">${money(cash)}</span></div>
         ${f.card > full ? '<div><span class="c-red">На карту больше полной ЗП — проверьте</span><span></span></div>' : ''}
-        ${r.prevCard || r.prevCash ? `<div><span>Долг с прошлого месяца</span><span class="num">карта ${money(r.prevCard)} · нал ${money(r.prevCash)}</span></div>` : ''}
-        <div><span>Выдано</span><span class="num">карта ${money(r.paidCard)} · нал ${money(r.paidCash)}</span></div>
-        <div class="t"><span>Осталось выдать</span><span class="num">${money(r.leftCard + r.leftCash)}</span></div>
-      </div>
-      <details><summary>Официальная часть (для бухгалтера)</summary>
-        <div class="calc" style="margin-top:8px"><div><span>Начислено</span><span class="num">${money(gross)}</span></div>
+        <div class="t"><span>Полная ЗП</span><span class="num">${money(full)}</span></div>
+      </div>`; };
+  const taxHtml = () => { const g = f.gross, ndfl = Math.round(g * 0.12), soc = Math.round(g * 0.12); return `<div class="calc">
+        <div><span>Начислено официально</span><span class="num">${money(g)}</span></div>
         <div><span>НДФЛ 12%, удерживается (в т.ч. ИНПС 0,1%)</span><span class="num">${money(ndfl)}</span></div>
-        <div><span>Налог 12%, платит компания сверху</span><span class="num">${money(soc)}</span></div>
-        <div class="t"><span>Налогов всего 24%</span><span class="num">${money(ndfl + soc)}</span></div>
-        <div><span>На карту</span><span class="num">${money(f.card)}</span></div></div>
-      </details>`; };
+        <div><span>Налог 12%, платит компания</span><span class="num">${money(soc)}</span></div>
+        <div><span>Налогов всего 24%</span><span class="num">${money(ndfl + soc)}</span></div>
+        <div class="t"><span>Затраты на сотрудника</span><span class="num">${money(f.full + ndfl + soc)}</span></div>
+      </div><p class="hint">Статья: ${esc(catOf(e.cat))}${PROD.indexOf(catOf(e.cat)) >= 0 ? ' — входит в чистую себестоимость' : ' — входит в полную себестоимость'}.</p>`; };
   const isDirty = () => f.type !== r.type || f.rate !== r.rate || String(f.qty) !== String(r.qty) || f.full !== r.full || f.card !== r.card || f.gross !== r.gross || f.comment !== r.comment;
   const refresh = () => {
     document.getElementById('calcBox').innerHTML = calcHtml();
+    document.getElementById('taxBox').innerHTML = taxHtml();
     const fu = document.getElementById('full'); if (fu && document.activeElement !== fu) fu.value = money(f.full);
     const lab = document.querySelector('label[for=full] em'); if (lab) lab.textContent = f.manual ? '(вписана вручную)' : '(считается сама)';
     const sv = document.getElementById('save'); const d = isDirty(); sv.disabled = !d; sv.textContent = d ? 'Сохранить' : 'Сохранено';
   };
   const draw = () => {
-    const full = f.full, dirty = isDirty();
+    const full = f.full, dirty = isDirty(), st = status(r);
+    const left = Math.max(0, r.leftCard + r.leftCash);
     screen(r.name, `
-      <div><h2>${esc(r.name)}</h2><p class="hint">${esc([e.fio && e.fio !== r.name ? e.fio : '', e.role, mName(S.data.month)].filter(Boolean).join(' · '))}</p></div>
-      ${e.comment ? `<div class="warn">${esc(e.comment)}</div>` : ''}
-      <div class="field"><span class="label">Как считается</span>
-        <div class="chips">${['Месяц', 'Смена', 'День'].map(x => `<button class="chip" type="button" data-t="${x}" aria-pressed="${f.type === x}">${x === 'Месяц' ? 'Оклад за месяц' : x === 'Смена' ? 'За смену' : 'За день'}</button>`).join('')}</div></div>
-      <div class="form two">
-        <div class="field"><label class="label" for="rate">${f.type === 'Месяц' ? 'Оклад за месяц' : f.type === 'Смена' ? 'Ставка за смену' : 'Ставка за день'}</label>
-          <input class="txt money num" id="rate" inputmode="numeric" value="${money(f.rate)}"></div>
-        ${f.type !== 'Месяц' ? `<div class="field"><label class="label" for="qty">${f.type === 'Смена' ? 'Смен за месяц' : 'Рабочих дней'}</label>
-          <div class="stepper"><button type="button" id="qm" aria-label="Меньше">−</button><input class="txt num" id="qty" inputmode="numeric" value="${esc(f.qty)}"><button type="button" id="qp" aria-label="Больше">+</button></div></div>` : '<div></div>'}
-        <div class="field"><label class="label" for="full">Полная ЗП <em>${f.manual ? '(вписана вручную)' : '(считается сама)'}</em></label>
-          <input class="txt money num" id="full" inputmode="numeric" value="${money(full)}"></div>
-        <div class="field"><label class="label" for="gross">Начислено официально <em>(из таблицы бухгалтера)</em></label>
-          <input class="txt money num" id="gross" inputmode="numeric" value="${money(f.gross)}"></div>
-        <div class="field"><label class="label" for="card">На карту <em>(начислено − 12%)</em></label>
-          <input class="txt money num" id="card" inputmode="numeric" value="${money(f.card)}"></div>
+      <div class="panel">
+        <div class="head">${av(r.name, e.cat)}<div><h2>${esc(r.name)}</h2><p class="hint">${esc([e.role, SHORT[catOf(e.cat)], mName(S.data.month)].filter(Boolean).join(' · '))}</p></div></div>
+        <div class="fullsum"><span class="hint">Полная ЗП</span><b class="num">${money(r.full)}</b></div>
+        <div class="stats">
+          <div class="k1"><span>На карту</span><b class="num">${money(r.card)}</b></div>
+          <div class="k2"><span>Наличными</span><b class="num">${money(r.cash)}</b></div>
+          <div class="k3"><span>Осталось</span><b class="num">${money(left)}</b></div>
+        </div>
+        ${r.prevCard || r.prevCash ? `<p class="hint" style="margin-top:8px">Включая долг с прошлого месяца: карта ${money(r.prevCard)} · нал ${money(r.prevCash)}</p>` : ''}
       </div>
-      <div id="calcBox">${calcHtml()}</div>
-      <div class="field"><label class="label" for="cmt">Комментарий <em>(необязательно)</em></label><textarea class="txt" id="cmt" maxlength="300">${esc(f.comment)}</textarea></div>
-      <div class="actions"><button class="btn" id="save" type="button" ${dirty ? '' : 'disabled'}>${dirty ? 'Сохранить' : 'Сохранено'}</button></div>
-      ${r.by ? `<p class="stamp">Последний раз менял: ${esc(r.by)}${r.at ? ', ' + esc(r.at) : ''}</p>` : ''}
-
-      <h2>Выплаты</h2>
-      <div class="pays">${pays.length ? pays.map(p => `<div class="pay ${p.cancelled ? 'off' : ''}"><div class="w"><b class="${p.kind === 'Карта' ? 'c-card' : 'c-cash'}">${p.kind === 'Карта' ? 'Карта' : 'Наличные'} · <span class="num">${money(p.sum)}</span></b>
-          <small>${esc(fmtDate(p.date))} · ${esc(p.by)}${p.comment ? ' · ' + esc(p.comment) : ''}${p.cancelled ? ' · отменена' : ''}</small></div>
-          ${p.cancelled ? '' : `<button type="button" data-cancel="${esc(p.id)}">Отменить</button>`}</div>`).join('') : '<p class="hint">Выплат пока нет.</p>'}</div>
-      <div id="addBox"></div>
+      ${e.comment ? `<div class="warn">${esc(e.comment)}</div>` : ''}
       <div class="actions">
-        <button class="btn card small" type="button" id="aCard">+ Выдано на карту</button>
-        <button class="btn cash small" type="button" id="aCash">+ Выдано наличными</button>
-      </div>`, () => openMonth(S.data.month));
+        <button class="btn card" type="button" id="aCard" ${r.leftCard > 0 ? '' : ''}>Выдать на карту</button>
+        <button class="btn cash" type="button" id="aCash">Выдать наличными</button>
+      </div>
+      <div id="addBox"></div>
+      <div class="panel"><b>Выплаты</b>
+        <div class="pays" style="margin-top:6px">${pays.length ? pays.map(p => `<div class="pay ${p.cancelled ? 'off' : ''}"><div class="w"><b class="${p.kind === 'Карта' ? 'c-card' : 'c-cash'}">${p.kind === 'Карта' ? 'Карта' : 'Наличные'} · <span class="num">${money(p.sum)}</span></b>
+          <small>${esc(fmtDate(p.date))} · ${esc(p.by)}${p.comment ? ' · ' + esc(p.comment) : ''}${p.cancelled ? ' · отменена' : ''}</small></div>
+          ${p.cancelled ? '' : `<button type="button" data-cancel="${esc(p.id)}">Отменить</button>`}</div>`).join('') : '<p class="hint">Пока ничего не выдано.</p>'}</div>
+      </div>
+      <details class="panel" id="edit" ${editOpen || dirty ? 'open' : ''}><summary>Изменить сумму за месяц</summary><div class="in">
+        <div class="field"><span class="label">Как считается</span>
+          <div class="chips">${['Месяц', 'Смена', 'День'].map(x => `<button class="chip" type="button" data-t="${x}" aria-pressed="${f.type === x}">${x === 'Месяц' ? 'Оклад' : x === 'Смена' ? 'За смену' : 'За день'}</button>`).join('')}</div></div>
+        <div class="form two">
+          <div class="field"><label class="label" for="rate">${f.type === 'Месяц' ? 'Оклад за месяц' : f.type === 'Смена' ? 'Ставка за смену' : 'Ставка за день'}</label>
+            <input class="txt money num" id="rate" inputmode="numeric" value="${money(f.rate)}"></div>
+          ${f.type !== 'Месяц' ? `<div class="field"><label class="label" for="qty">${f.type === 'Смена' ? 'Смен за месяц' : 'Рабочих дней'}</label>
+            <div class="stepper"><button type="button" id="qm" aria-label="Меньше">−</button><input class="txt num" id="qty" inputmode="numeric" value="${esc(f.qty)}"><button type="button" id="qp" aria-label="Больше">+</button></div></div>` : ''}
+          <div class="field"><label class="label" for="full">Полная ЗП <em>${f.manual ? '(вписана вручную)' : '(считается сама)'}</em></label>
+            <input class="txt money num" id="full" inputmode="numeric" value="${money(full)}"></div>
+          <div class="field"><label class="label" for="gross">Начислено официально <em>(из таблицы бухгалтера)</em></label>
+            <input class="txt money num" id="gross" inputmode="numeric" value="${money(f.gross)}"></div>
+          <div class="field"><label class="label" for="card">На карту <em>(начислено − 12%)</em></label>
+            <input class="txt money num" id="card" inputmode="numeric" value="${money(f.card)}"></div>
+        </div>
+        <div id="calcBox">${calcHtml()}</div>
+        <div class="field"><label class="label" for="cmt">Комментарий <em>(необязательно)</em></label><textarea class="txt" id="cmt" maxlength="300">${esc(f.comment)}</textarea></div>
+        <div class="actions"><button class="btn" id="save" type="button" ${dirty ? '' : 'disabled'}>${dirty ? 'Сохранить' : 'Сохранено'}</button></div>
+        ${r.by ? `<p class="stamp">Последний раз менял: ${esc(r.by)}${r.at ? ', ' + esc(r.at) : ''}</p>` : ''}
+      </div></details>
+      <details class="panel"><summary>Налоги и затраты</summary><div class="in" id="taxBox">${taxHtml()}</div></details>`, () => openMonth(S.data.month));
 
-    $app.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { keep(); f.type = b.dataset.t; if (f.type !== 'Месяц' && f.qty === '') f.qty = 0; if (!f.manual) f.full = calcFull(); draw(); });
+    document.getElementById('edit').ontoggle = (ev) => { editOpen = ev.target.open; };
+    $app.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { keep(); editOpen = true; f.type = b.dataset.t; if (f.type !== 'Месяц' && f.qty === '') f.qty = 0; if (!f.manual) f.full = calcFull(); draw(); });
     const num = (id, key, after) => { const el = document.getElementById(id); if (!el) return;
       el.oninput = () => { f[key] = digits(el.value); if (after) after(); refresh(); };
       el.onblur = () => { el.value = money(f[key]); }; };
@@ -412,8 +490,8 @@ function showRow(empId){
     const qty = document.getElementById('qty');
     if (qty) {
       qty.oninput = () => { f.qty = Math.min(31, digits(qty.value)); if (!f.manual) f.full = calcFull(); refresh(); };
-      document.getElementById('qm').onclick = () => { keep(); f.qty = Math.max(0, (Number(f.qty) || 0) - 1); if (!f.manual) f.full = calcFull(); draw(); };
-      document.getElementById('qp').onclick = () => { keep(); f.qty = Math.min(31, (Number(f.qty) || 0) + 1); if (!f.manual) f.full = calcFull(); draw(); };
+      document.getElementById('qm').onclick = () => { keep(); editOpen = true; f.qty = Math.max(0, (Number(f.qty) || 0) - 1); if (!f.manual) f.full = calcFull(); draw(); };
+      document.getElementById('qp').onclick = () => { keep(); editOpen = true; f.qty = Math.min(31, (Number(f.qty) || 0) + 1); if (!f.manual) f.full = calcFull(); draw(); };
     }
     document.getElementById('cmt').oninput = (ev) => { f.comment = ev.target.value; refresh(); };
     document.getElementById('save').onclick = async () => {
@@ -425,7 +503,7 @@ function showRow(empId){
     };
     $app.querySelectorAll('[data-cancel]').forEach(b => b.onclick = () => {
       const box = document.getElementById('addBox');
-      box.innerHTML = `<div class="dlg"><b>Отменить эту выплату?</b><p class="hint" style="margin:0">Она останется в таблице зачёркнутой.</p>
+      box.innerHTML = `<div class="dlg"><b>Отменить эту выплату?</b><p class="hint">Она останется в таблице зачёркнутой.</p>
         <div class="actions"><button class="btn" id="cYes" type="button">Да, отменить</button><button class="btn ghost" id="cNo" type="button">Нет</button></div></div>`;
       box.scrollIntoView({ block: 'center' });
       document.getElementById('cNo').onclick = () => { box.innerHTML = ''; };
@@ -438,7 +516,7 @@ function showRow(empId){
         <div class="form two"><div class="field"><label class="label" for="pSum">Сумма</label><input class="txt money num" id="pSum" inputmode="numeric" value="${money(Math.max(0, left))}"></div>
         <div class="field"><label class="label" for="pDate">Дата</label><input class="txt" type="date" id="pDate" value="${esc(S.ref.today)}" max="${esc(S.ref.today)}"></div></div>
         <div class="field"><label class="label" for="pCmt">Комментарий <em>(например, аванс)</em></label><input class="txt" id="pCmt" maxlength="200"></div>
-        ${kind === 'Наличные' ? '<p class="hint" style="margin:0">Эта выдача сама запишется в «Деньги» расходом из кассы «Наличные».</p>' : ''}
+        ${kind === 'Наличные' ? '<p class="hint">Эта выдача сама запишется в «Деньги» расходом из кассы «Наличные».</p>' : ''}
         <div class="actions"><button class="btn ${kind === 'Карта' ? 'card' : 'cash'}" id="pOk" type="button">Записать</button><button class="btn ghost" id="pNo" type="button">Отмена</button></div></div>`;
       box.scrollIntoView({ block: 'center' });
       const sumEl = document.getElementById('pSum');
@@ -465,40 +543,48 @@ async function reloadRow(empId){
 
 /* ================= СОТРУДНИКИ ================= */
 function showEmps(){
-  const emps = S.ref.emps;
-  const act = emps.filter(e => e.active), off = emps.filter(e => !e.active);
-  const item = e => `<button class="emp" type="button" data-e="${esc(e.id)}"><span class="n">${esc(e.name)}</span>
-    <span class="f num">${money(e.rate)}${e.type === 'Смена' ? ' / смена' : e.type === 'День' ? ' / день' : ''}</span>
-    <span class="d">${e.fio ? `<span>${esc(e.fio)}</span>` : ''}${e.role ? `<span>${esc(e.role)}</span>` : ''}<span class="c-card num">карта ${money(e.card)}</span></span></button>`;
-  screen('Сотрудники', `<h2>Сотрудники</h2><p class="hint">Здесь — оклад и сумма на карту по умолчанию. Их берёт каждый новый месяц.</p>
-    <div class="actions"><button class="btn" id="eAdd" type="button">+ Новый сотрудник</button></div>
-    <div class="list">${act.map(item).join('')}</div>
+  const emps = S.ref.emps, q = (S.eq || '').trim().toLowerCase();
+  const match = e => !q || (e.name + ' ' + (e.fio || '') + ' ' + (e.role || '')).toLowerCase().includes(q);
+  const act = emps.filter(e => e.active && match(e)), off = emps.filter(e => !e.active && match(e));
+  const item = e => `<button class="emp" type="button" data-e="${esc(e.id)}">${av(e.name, e.cat)}
+    <span class="m"><span class="n">${esc(e.name)}</span><span class="s">${esc(e.role || e.fio || '')}</span></span>
+    <span class="r"><span class="f num">${money(e.rate)}</span><span class="st" style="color:var(--muted)">${e.type === 'Смена' ? 'за смену' : e.type === 'День' ? 'за день' : 'оклад'}</span></span></button>`;
+  const grouped = CATS.map(c => { const l = act.filter(e => catOf(e.cat) === c); return l.length ? `<div class="ghead"><span>${esc(c)} · ${l.length}</span></div>` + l.map(item).join('') : ''; }).join('');
+  screen('Сотрудники', `
+    <button class="btn" id="eAdd" type="button">+ Новый сотрудник</button>
+    <input class="search" id="eq" type="search" placeholder="Найти сотрудника" value="${esc(S.eq || '')}" aria-label="Найти сотрудника">
+    <p class="hint">Оклад и сумма на карту отсюда берутся в каждый новый месяц.</p>
+    ${grouped ? `<div class="list">${grouped}</div>` : '<p class="hint">Никого не найдено.</p>'}
     ${off.length ? `<h3>Не работают</h3><div class="list">${off.map(item).join('')}</div>` : ''}`, showMonth);
   document.getElementById('eAdd').onclick = () => editEmp(null);
+  const qi = document.getElementById('eq');
+  qi.oninput = () => { S.eq = qi.value; const pos = qi.selectionStart; showEmps(); const n = document.getElementById('eq'); n.focus(); n.setSelectionRange(pos, pos); };
   $app.querySelectorAll('[data-e]').forEach(b => b.onclick = () => editEmp(emps.find(e => e.id === b.dataset.e)));
 }
 function editEmp(e){
   const f = e ? Object.assign({}, e) : { id: '', name: '', fio: '', role: '', type: 'Месяц', rate: 0, card: 0, gross: 0, cat: 'Производственный персонал', active: true, comment: '' };
   const draw = () => {
     screen(e ? e.name : 'Новый сотрудник', `
-      <div class="form two">
+      <div class="panel form">
         <div class="field"><label class="label" for="fName">Имя</label><input class="txt" id="fName" maxlength="60" value="${esc(f.name)}"></div>
+        <div class="field"><label class="label" for="fRole">Должность</label><input class="txt" id="fRole" maxlength="80" value="${esc(f.role)}"></div>
+        <div class="field"><label class="label" for="fCat">Статья затрат</label>
+          <select class="txt" id="fCat" aria-describedby="fCatH">${CATS.map(x => `<option value="${esc(x)}" ${catOf(f.cat) === x ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select><p class="hint" id="fCatH">Операторы, механики и цех — чистая себестоимость. Остальные — в полную.</p></div>
         <div class="field"><label class="label" for="fFio">ФИО официально <em>(необязательно)</em></label><input class="txt" id="fFio" maxlength="80" value="${esc(f.fio)}"></div>
-        <div class="field"><label class="label" for="fRole">Должность <em>(необязательно)</em></label><input class="txt" id="fRole" maxlength="80" value="${esc(f.role)}"></div>
       </div>
-      <div class="field"><span class="label">Как считается</span><div class="chips">${['Месяц', 'Смена', 'День'].map(x => `<button class="chip" type="button" data-t="${x}" aria-pressed="${f.type === x}">${x === 'Месяц' ? 'Оклад за месяц' : x === 'Смена' ? 'За смену' : 'За день'}</button>`).join('')}</div></div>
-      <div class="form two">
-        <div class="field"><label class="label" for="fRate">${f.type === 'Месяц' ? 'Оклад за месяц' : f.type === 'Смена' ? 'Ставка за смену' : 'Ставка за день'}</label><input class="txt money num" id="fRate" inputmode="numeric" value="${money(f.rate)}"></div>
+      <div class="panel form">
+        <div class="field"><span class="label">Как считается</span><div class="chips">${['Месяц', 'Смена', 'День'].map(x => `<button class="chip" type="button" data-t="${x}" aria-pressed="${f.type === x}">${x === 'Месяц' ? 'Оклад' : x === 'Смена' ? 'За смену' : 'За день'}</button>`).join('')}</div></div>
+        <div class="field"><label class="label" for="fRate">${f.type === 'Месяц' ? 'Оклад за месяц (на руки)' : f.type === 'Смена' ? 'Ставка за смену' : 'Ставка за день'}</label><input class="txt money num" id="fRate" inputmode="numeric" value="${money(f.rate)}"></div>
         <div class="field"><label class="label" for="fGross">Начислено официально <em>(обычно)</em></label><input class="txt money num" id="fGross" inputmode="numeric" value="${money(f.gross)}"></div>
-        <div class="field"><label class="label" for="fCard">На карту <em>(обычно, начислено − 12%)</em></label><input class="txt money num" id="fCard" inputmode="numeric" value="${money(f.card)}"></div>
+        <div class="field"><label class="label" for="fCard">На карту <em>(начислено − 12%)</em></label><input class="txt money num" id="fCard" inputmode="numeric" value="${money(f.card)}"></div>
       </div>
-      <div class="field"><span class="label">Статья затрат</span><div class="chips">${CATS.map(x => `<button class="chip" type="button" data-c="${x}" aria-pressed="${catOf(f.cat) === x}">${x}</button>`).join('')}</div><p class="hint">Операторы, механики и производственный персонал — чистая себестоимость. Администрация, логистика и маркетинг добавляются в полную.</p></div>
-      <div class="field"><label class="label" for="fCmt">Комментарий <em>(необязательно)</em></label><textarea class="txt" id="fCmt" maxlength="300">${esc(f.comment)}</textarea></div>
-      ${e ? `<div class="field"><span class="label">Работает?</span><div class="chips"><button class="chip" type="button" data-a="1" aria-pressed="${f.active}">Работает</button><button class="chip" type="button" data-a="0" aria-pressed="${!f.active}">Уволен</button></div></div>` : '<p class="hint">Новый сотрудник сразу появится в последнем открытом месяце.</p>'}
-      <div class="actions"><button class="btn" id="fSave" type="button">Сохранить</button></div>`, showEmps);
-    const keep = () => { f.name = document.getElementById('fName').value; f.fio = document.getElementById('fFio').value; f.role = document.getElementById('fRole').value;
+      <div class="panel form">
+        <div class="field"><label class="label" for="fCmt">Комментарий <em>(необязательно)</em></label><textarea class="txt" id="fCmt" maxlength="300">${esc(f.comment)}</textarea></div>
+        ${e ? `<div class="field"><span class="label">Работает?</span><div class="chips"><button class="chip" type="button" data-a="1" aria-pressed="${f.active}">Работает</button><button class="chip" type="button" data-a="0" aria-pressed="${!f.active}">Уволен</button></div></div>` : '<p class="hint">Новый сотрудник сразу появится в последнем открытом месяце.</p>'}
+      </div>
+      <button class="btn" id="fSave" type="button">Сохранить</button>`, showEmps);
+    const keep = () => { f.name = document.getElementById('fName').value; f.fio = document.getElementById('fFio').value; f.role = document.getElementById('fRole').value; f.cat = document.getElementById('fCat').value;
       f.rate = digits(document.getElementById('fRate').value); f.card = digits(document.getElementById('fCard').value); f.gross = digits(document.getElementById('fGross').value); f.comment = document.getElementById('fCmt').value; };
-    $app.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { keep(); f.cat = b.dataset.c; draw(); });
     document.getElementById('fGross').oninput = (ev) => { const g = digits(ev.target.value); document.getElementById('fCard').value = money(Math.round(g * 0.88)); };
     $app.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { keep(); f.type = b.dataset.t; draw(); });
     $app.querySelectorAll('[data-a]').forEach(b => b.onclick = () => { keep(); f.active = b.dataset.a === '1'; draw(); });
@@ -512,6 +598,7 @@ function editEmp(e){
   };
   draw();
 }
+
 
 start();
 </script>
