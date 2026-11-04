@@ -363,7 +363,7 @@ function showMonth(){
   const owe = t.full + (t.prevCard || 0) + (t.prevCash || 0);
   const left = Math.max(0, t.leftCard + t.leftCash), paid = t.paidCard + t.paidCash;
   const pct = owe > 0 ? Math.min(100, Math.round(paid / (paid + left || 1) * 100)) : 0;
-  const tab = S.tab || 'people', fs = S.fs || 'all', fg = S.fg || 'all';
+  const fs = S.fs || 'all', fg = S.fg || 'all';
   const cnt = { all: d.rows.length, left: d.rows.filter(r => status(r).k === 'left').length, done: d.rows.filter(r => status(r).k === 'done').length, chk: d.rows.filter(r => status(r).k === 'chk').length };
   const rows = d.rows.filter(r => (!q || (r.name + ' ' + (empOf(r.empId).fio || '') + ' ' + (empOf(r.empId).role || '')).toLowerCase().includes(q))
     && (fs === 'all' || status(r).k === fs) && (fg === 'all' || catOf(r.cat) === fg));
@@ -379,8 +379,7 @@ function showMonth(){
       <div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div>
       <div class="lbl num">карта ${money(Math.max(0, t.leftCard))} · нал ${money(Math.max(0, t.leftCash))} · выдано ${money(paid)}</div>
     </div>
-    <div class="seg" role="group" aria-label="Раздел"><button type="button" data-tab="people" aria-pressed="${tab === 'people'}">Ведомость</button><button type="button" data-tab="cost" aria-pressed="${tab === 'cost'}">Затраты</button></div>
-    ${tab === 'people' ? people : costTable(t)}
+    ${people}
     <div class="panel" style="padding:0"><div class="menu">
       <button type="button" id="mEmps">Список и оклады сотрудников</button>
       <button type="button" id="mAll" ${left > 0 ? '' : 'disabled'}>Выдать всем сразу</button>
@@ -388,7 +387,6 @@ function showMonth(){
     </div></div>
     <div id="allAsk"></div>`);
   bindNav();
-  $app.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { S.tab = b.dataset.tab; showMonth(); });
   $app.querySelectorAll('[data-fs]').forEach(b => b.onclick = () => { S.fs = b.dataset.fs; showMonth(); });
   $app.querySelectorAll('[data-fg]').forEach(b => b.onclick = () => { S.fg = b.dataset.fg; showMonth(); });
   const qi = document.getElementById('q');
