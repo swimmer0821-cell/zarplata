@@ -69,6 +69,12 @@ h2{font-size:23px;margin:4px 0 0} h3{font-size:18px;margin:6px 0 0;color:var(--m
 .box small{display:block;font-size:14px;color:var(--muted)}
 .box.card{border-color:var(--card);background:var(--card-bg)} .box.card b{color:var(--card)}
 .box.cash{border-color:var(--cash);background:var(--cash-bg)} .box.cash b{color:var(--cash)}
+.cost{border:2px solid var(--line);border-radius:var(--r);padding:12px 14px;margin:0 0 14px}
+.cost .ttl{display:block;font-size:17px}.cost>small{display:block;color:var(--muted);font-size:14px;margin-bottom:6px}
+.cost table{width:100%;border-collapse:collapse;font-size:15px}.cost td{padding:6px 0;border-bottom:1px solid var(--line);vertical-align:top}
+.cost td.num{text-align:right;white-space:nowrap;padding-left:8px}.cost td small{color:var(--muted);font-size:13px}
+.cost tr.tot td{font-weight:700;border-bottom:2px solid var(--ink)}.cost tr.all td{font-size:17px;border-bottom:none}
+.grp{display:flex;justify-content:space-between;font-weight:700;color:var(--muted);font-size:14px;margin:10px 2px 2px;text-transform:uppercase}
 .box.left{border-color:var(--warn);background:var(--warn-bg)} .box.left b{color:var(--warn)}
 .search{width:100%;min-height:54px;border:2px solid var(--line);border-radius:12px;padding:8px 14px;font-size:18px}
 .list{display:flex;flex-direction:column;gap:10px}
@@ -241,6 +247,26 @@ function leftTag(r){
   return `<span class="tag">осталось ${money(l)}</span>`;
 }
 function empOf(id){ return (S.ref.emps || []).find(e => e.id === id) || {}; }
+// Статьи затрат: первые две — чистая (производственная) себестоимость
+const CATS = ['Операторы и механики', 'Производственный персонал', 'Администрация', 'Логистика', 'Маркетинг'];
+const PROD = ['Операторы и механики', 'Производственный персонал'];
+function catOf(x) { return CATS.indexOf(x) >= 0 ? x : 'Производственный персонал'; }
+function groupRows(rows) {
+  return CATS.map(c => { const l = rows.filter(r => catOf(r.cat) === c); return { cat: c, rows: l, full: l.reduce((a, r) => a + (Number(r.full) || 0), 0) }; }).filter(g => g.rows.length);
+}
+function costTable(t) {
+  const by = t.byCat || [];
+  const line = (x) => `<tr><td>${esc(x.cat)} <small>${x.people} чел.</small></td><td class="num">${money(x.cost)}</td></tr>`;
+  return `<div class="cost">
+    <b class="ttl">Затраты на персонал по статьям</b>
+    <small>Затраты = полная ЗП + налоги 24% с официальной части (всего налогов ${money(t.tax + t.soc)})</small>
+    <table>
+      ${by.filter(x => x.prod).map(line).join('')}
+      <tr class="tot"><td>Чистая себестоимость<br><small>производство: операторы, механики, цех</small></td><td class="num">${money(t.costProd)}</td></tr>
+      ${by.filter(x => !x.prod).map(line).join('')}
+      <tr class="tot all"><td>Полная себестоимость<br><small>со всеми расходами: + администрация, логистика, маркетинг</small></td><td class="num">${money(t.costFull)}</td></tr>
+    </table></div>`;
+}
 function showMonth(){
   const ms = S.ref.months, m = S.month, d = S.data;
   const i = ms.indexOf(m), last = ms[ms.length - 1];
@@ -264,14 +290,14 @@ function showMonth(){
       <div class="box"><span>Фонд зарплаты</span><b class="num">${money(t.full)}</b><small>${t.people} чел.${diff !== null ? ' · к прошлому: ' + (diff > 0 ? '+' : '') + money(diff) : ''}</small></div>
       <div class="box card"><span>На карту</span><b class="num">${money(t.card)}</b><small>налог 12%: ${money(t.tax)}</small></div>
       <div class="box cash"><span>Наличными</span><b class="num">${money(t.cash)}</b></div>
-      <div class="box"><span>Затраты на зарплату</span><b class="num">${money(t.cost)}</b><small>полная ЗП + налоги 24% с офиц. части (${money(t.tax + t.soc)})<br>себестоимость ${money(t.costProd)} · маркетинг ${money(t.costMkt)}</small></div>
       <div class="box left"><span>Осталось выдать</span><b class="num">${money(t.leftCard + t.leftCash)}</b><small>карта ${money(t.leftCard)} · нал ${money(t.leftCash)}</small></div>
     </div>
+    ${costTable(t)}
     <input class="search" id="q" type="search" placeholder="Поиск по имени" value="${esc(S.q)}" aria-label="Поиск по имени">
-    <div class="list">${rows.length ? rows.map(r => `<button class="emp" type="button" data-id="${esc(r.empId)}">
+    <div class="list">${rows.length ? groupRows(rows).map(g => `<div class="grp"><span>${esc(g.cat)}</span><span class="num">${money(g.full)}</span></div>` + g.rows.map(r => `<button class="emp" type="button" data-id="${esc(r.empId)}">
         <span class="n">${esc(r.name)}</span><span class="f num">${money(r.full)}</span>
         <span class="d"><span class="c-card num">карта ${money(r.card)}</span><span class="c-cash num">нал ${money(r.cash)}</span>
-        ${r.type !== 'Месяц' ? `<span>${esc(r.qty || 0)} ${r.type === 'Смена' ? 'смен' : 'дн.'}</span>` : ''}${leftTag(r)}</span></button>`).join('')
+        ${r.type !== 'Месяц' ? `<span>${esc(r.qty || 0)} ${r.type === 'Смена' ? 'смен' : 'дн.'}</span>` : ''}${leftTag(r)}</span></button>`).join('')).join('')
       : '<p class="hint">Никого не найдено.</p>'}</div>
     <div class="actions">
       ${m === last ? `<button class="btn" id="mOpen" type="button">Открыть ${esc(mName(nextM))}</button>` : ''}
@@ -321,7 +347,7 @@ function showRow(empId){
   const calcHtml = () => { const full = f.full, cash = Math.max(0, full - f.card), gross = f.gross, ndfl = Math.round(gross * 0.12), soc = Math.round(gross * 0.12); return `<div class="calc">
         <div class="cardrow"><span>На карту</span><span class="num">${money(f.card)}</span></div>
         <div class="cashrow"><span>Наличными</span><span class="num">${money(cash)}</span></div>
-        <div><span>Затраты ${e.cat === 'Маркетинг' ? '(маркетинг)' : '(себестоимость)'}: полная + налоги 24%</span><span class="num">${money(full + ndfl + soc)}</span></div>
+        <div><span>Затраты (${esc(catOf(e.cat))}${PROD.indexOf(catOf(e.cat)) >= 0 ? ', в чистую себестоимость' : ''}): полная + налоги 24%</span><span class="num">${money(full + ndfl + soc)}</span></div>
         ${f.card > full ? '<div><span class="c-red">На карту больше полной ЗП — проверьте</span><span></span></div>' : ''}
         ${r.prevCard || r.prevCash ? `<div><span>Долг с прошлого месяца</span><span class="num">карта ${money(r.prevCard)} · нал ${money(r.prevCash)}</span></div>` : ''}
         <div><span>Выдано</span><span class="num">карта ${money(r.paidCard)} · нал ${money(r.paidCash)}</span></div>
@@ -452,7 +478,7 @@ function showEmps(){
   $app.querySelectorAll('[data-e]').forEach(b => b.onclick = () => editEmp(emps.find(e => e.id === b.dataset.e)));
 }
 function editEmp(e){
-  const f = e ? Object.assign({}, e) : { id: '', name: '', fio: '', role: '', type: 'Месяц', rate: 0, card: 0, gross: 0, cat: 'Производство', active: true, comment: '' };
+  const f = e ? Object.assign({}, e) : { id: '', name: '', fio: '', role: '', type: 'Месяц', rate: 0, card: 0, gross: 0, cat: 'Производственный персонал', active: true, comment: '' };
   const draw = () => {
     screen(e ? e.name : 'Новый сотрудник', `
       <div class="form two">
@@ -466,7 +492,7 @@ function editEmp(e){
         <div class="field"><label class="label" for="fGross">Начислено официально <em>(обычно)</em></label><input class="txt money num" id="fGross" inputmode="numeric" value="${money(f.gross)}"></div>
         <div class="field"><label class="label" for="fCard">На карту <em>(обычно, начислено − 12%)</em></label><input class="txt money num" id="fCard" inputmode="numeric" value="${money(f.card)}"></div>
       </div>
-      <div class="field"><span class="label">Статья затрат</span><div class="chips">${['Производство', 'Маркетинг'].map(x => `<button class="chip" type="button" data-c="${x}" aria-pressed="${f.cat === x}">${x === 'Производство' ? 'Производство (в себестоимость)' : 'Маркетинг'}</button>`).join('')}</div></div>
+      <div class="field"><span class="label">Статья затрат</span><div class="chips">${CATS.map(x => `<button class="chip" type="button" data-c="${x}" aria-pressed="${catOf(f.cat) === x}">${x}</button>`).join('')}</div><p class="hint">Операторы, механики и производственный персонал — чистая себестоимость. Администрация, логистика и маркетинг добавляются в полную.</p></div>
       <div class="field"><label class="label" for="fCmt">Комментарий <em>(необязательно)</em></label><textarea class="txt" id="fCmt" maxlength="300">${esc(f.comment)}</textarea></div>
       ${e ? `<div class="field"><span class="label">Работает?</span><div class="chips"><button class="chip" type="button" data-a="1" aria-pressed="${f.active}">Работает</button><button class="chip" type="button" data-a="0" aria-pressed="${!f.active}">Уволен</button></div></div>` : '<p class="hint">Новый сотрудник сразу появится в последнем открытом месяце.</p>'}
       <div class="actions"><button class="btn" id="fSave" type="button">Сохранить</button></div>`, showEmps);

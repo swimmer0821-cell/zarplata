@@ -15,7 +15,8 @@
  *   Официально начислено = На карту ÷ 0,88;  налог 12% = начислено − на карту
  *   Соцналог 12% от начисления платит компания сверху
  *   Налоги 24% (12% удерживается + 12% соцналог) — только с официального начисления из таблицы бухгалтера
- *   Затраты = Полная ЗП + налоги 24%; у сотрудников со статьёй «Маркетинг» — в маркетинг, не в себестоимость
+ *   Затраты = Полная ЗП + налоги 24%, по статьям затрат (см. COST_CATS):
+ *   чистая себестоимость — операторы/механики и производственный персонал; полная — все статьи
  *   Осталось выдать = (к выдаче + долг прошлого месяца) − выплаты
  *  Отменённые выплаты не считаются и не удаляются.
  * =============================================================
@@ -37,8 +38,12 @@ const PAY_KINDS = ['Карта', 'Наличные'];
 const MONEY_SHEET_ID = '18mgpXfwxlSQjfXNWjlOHpLGu_0Or5V9Z1ynmxXtFwVM';   // таблица «Учёт денег SUB PROFI»
 const MONEY_LINK_KINDS = ['Наличные'];                                   // карту пока не связываем
 const MONEY_ART = { type: 'Расход', cat: 'Зарплата', sub: 'Наличная часть', pay: 'Наличные' };
-// Статья затрат сотрудника: «Производство» идёт в себестоимость, «Маркетинг» — в маркетинг
-const COST_CATS = ['Производство', 'Маркетинг'];
+// Статьи затрат (управленческий учёт):
+//  чистая (производственная) себестоимость = «Операторы и механики» + «Производственный персонал»
+//  полная себестоимость = чистая + «Администрация» + «Логистика» + «Маркетинг»
+const COST_CATS = ['Операторы и механики', 'Производственный персонал', 'Администрация', 'Логистика', 'Маркетинг'];
+const PROD_CATS = ['Операторы и механики', 'Производственный персонал'];
+function costCat_(x) { const t = s_(x); if (COST_CATS.indexOf(t) >= 0) return t; return 'Производственный персонал'; }
 const MONEY_ART_MKT = { type: 'Расход', cat: 'Реклама и продвижение', sub: 'СММ и таргет', pay: 'Наличные' };
 
 const EMP_H = ['ID', 'Имя', 'ФИО (официально)', 'Должность / заметка', 'Способ', 'Ставка', 'На карту (обычно)', 'Работает', 'Комментарий', 'Начислено официально (обычно)', 'Статья затрат'];
@@ -149,7 +154,7 @@ function readEmps_() {
     type: TYPES.indexOf(s_(r[4])) >= 0 ? s_(r[4]) : 'Месяц', rate: n_(r[5]), card: n_(r[6]),
     active: s_(r[7]) !== 'Нет', comment: s_(r[8]),
     gross: r[9] === '' || r[9] === undefined ? Math.round(n_(r[6]) / (1 - TAX)) : Math.round(n_(r[9])),
-    cat: s_(r[10]) === 'Маркетинг' ? 'Маркетинг' : 'Производство'
+    cat: costCat_(r[10])
   })).filter(e => e.id && e.name);
 }
 function readRows_() {
@@ -196,7 +201,7 @@ function month_(m) {
         cash: cash, prevCard: c.card, prevCash: c.cash, paidCard: paidCard, paidCash: paidCash,
         leftCard: r.card + c.card - paidCard, leftCash: cash + c.cash - paidCash,
         tax: tax, inps: Math.round(gross * INPS), soc: soc, cost: cost,
-        cat: e.cat || 'Производство', costProd: e.cat === 'Маркетинг' ? 0 : cost, costMkt: e.cat === 'Маркетинг' ? cost : 0
+        cat: e.cat || 'Производственный персонал'
       });
     });
     const next = {};
@@ -208,10 +213,17 @@ function month_(m) {
   });
   if (!result) result = [];
   const t = (k) => result.reduce((a, x) => a + (Number(x[k]) || 0), 0);
+  // затраты по статьям и обе себестоимости
+  const byCat = COST_CATS.map(c => {
+    const list = result.filter(x => x.cat === c);
+    const sum = (k) => list.reduce((a, x) => a + (Number(x[k]) || 0), 0);
+    return { cat: c, prod: PROD_CATS.indexOf(c) >= 0, people: list.length, full: sum('full'), taxes: sum('tax') + sum('soc'), cost: sum('cost') };
+  });
+  const costProd = byCat.filter(x => x.prod).reduce((a, x) => a + x.cost, 0);
   return {
     month: m, rows: result,
     pays: readPays_().filter(p => p.month === m),
-    total: { full: t('full'), card: t('card'), cash: t('cash'), gross: t('gross'), tax: t('tax'), soc: t('soc'), cost: t('cost'), costProd: t('costProd'), costMkt: t('costMkt'),
+    total: { full: t('full'), card: t('card'), cash: t('cash'), gross: t('gross'), tax: t('tax'), soc: t('soc'), cost: t('cost'), costProd: costProd, costFull: t('cost'), byCat: byCat,
       paidCard: t('paidCard'), paidCash: t('paidCash'), leftCard: t('leftCard'), leftCash: t('leftCash'), people: result.length }
   };
 }
@@ -294,7 +306,7 @@ function saveEmp_(user, e) {
   const type = TYPES.indexOf(s_(e.type)) >= 0 ? s_(e.type) : 'Месяц';
   const gross = e.gross === undefined || e.gross === '' ? Math.round(money_(e.card) / (1 - TAX)) : money_(e.gross);
   const vals = [s_(e.name).slice(0, 60), safe_(e.fio, 80), safe_(e.role, 80), type, money_(e.rate), money_(e.card), e.active === false ? 'Нет' : 'Да', safe_(e.comment, 300),
-    gross, s_(e.cat) === 'Маркетинг' ? 'Маркетинг' : 'Производство'];
+    gross, costCat_(e.cat)];
   const sh = sheet_(SH_EMP), emps = readEmps_();
   if (s_(e.id)) {
     const old = emps.find(z => z.id === s_(e.id));
