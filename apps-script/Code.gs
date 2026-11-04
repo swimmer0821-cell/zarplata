@@ -14,7 +14,8 @@
  *   Наличными      = Полная ЗП − На карту
  *   Официально начислено = На карту ÷ 0,88;  налог 12% = начислено − на карту
  *   Соцналог 12% от начисления платит компания сверху
- *   Затраты на зарплату (для себестоимости) = Полная ЗП + налог 12% + соцналог 12%
+ *   Налоги 24% (12% удерживается + 12% соцналог) — только с официального начисления из таблицы бухгалтера
+ *   Затраты = Полная ЗП + налоги 24%; у сотрудников со статьёй «Маркетинг» — в маркетинг, не в себестоимость
  *   Осталось выдать = (к выдаче + долг прошлого месяца) − выплаты
  *  Отменённые выплаты не считаются и не удаляются.
  * =============================================================
@@ -36,9 +37,12 @@ const PAY_KINDS = ['Карта', 'Наличные'];
 const MONEY_SHEET_ID = '18mgpXfwxlSQjfXNWjlOHpLGu_0Or5V9Z1ynmxXtFwVM';   // таблица «Учёт денег SUB PROFI»
 const MONEY_LINK_KINDS = ['Наличные'];                                   // карту пока не связываем
 const MONEY_ART = { type: 'Расход', cat: 'Зарплата', sub: 'Наличная часть', pay: 'Наличные' };
+// Статья затрат сотрудника: «Производство» идёт в себестоимость, «Маркетинг» — в маркетинг
+const COST_CATS = ['Производство', 'Маркетинг'];
+const MONEY_ART_MKT = { type: 'Расход', cat: 'Реклама и продвижение', sub: 'СММ и таргет', pay: 'Наличные' };
 
-const EMP_H = ['ID', 'Имя', 'ФИО (официально)', 'Должность / заметка', 'Способ', 'Ставка', 'На карту (обычно)', 'Работает', 'Комментарий'];
-const ROW_H = ['Месяц', 'ID сотрудника', 'Имя', 'Способ', 'Ставка', 'Кол-во смен/дней', 'Полная ЗП', 'На карту', 'Комментарий', 'Изменил', 'Когда'];
+const EMP_H = ['ID', 'Имя', 'ФИО (официально)', 'Должность / заметка', 'Способ', 'Ставка', 'На карту (обычно)', 'Работает', 'Комментарий', 'Начислено официально (обычно)', 'Статья затрат'];
+const ROW_H = ['Месяц', 'ID сотрудника', 'Имя', 'Способ', 'Ставка', 'Кол-во смен/дней', 'Полная ЗП', 'На карту', 'Комментарий', 'Изменил', 'Когда', 'Начислено официально'];
 const PAY_H = ['ID', 'Месяц', 'ID сотрудника', 'Дата', 'Вид', 'Сумма', 'Комментарий', 'Кто', 'Когда', 'Статус'];
 const USER_H = ['Пользователь', 'PIN'];
 
@@ -52,7 +56,7 @@ function setup() {
   ss.setSpreadsheetTimeZone(TIMEZONE);
   const mk = (name, head) => {
     const sh = ss.getSheetByName(name) || ss.insertSheet(name);
-    if (sh.getLastRow() === 0) sh.getRange(1, 1, 1, head.length).setValues([head]);
+    sh.getRange(1, 1, 1, head.length).setValues([head]);   // заголовки (новые колонки добавятся справа)
     sh.getRange(1, 1, 1, head.length).setFontWeight('bold').setBackground('#e8eef3');
     sh.setFrozenRows(1);
     return sh;
@@ -63,7 +67,9 @@ function setup() {
   pay.getRange('D2:D').setNumberFormat('dd.mm.yyyy');
   users.getRange('B2:B').setNumberFormat('@');
   ['F2:G', 'F2:F'].forEach(a => emp.getRange(a).setNumberFormat('#,##0'));
-  rows.getRange('E2:E').setNumberFormat('#,##0'); rows.getRange('G2:H').setNumberFormat('#,##0');
+  rows.getRange('E2:E').setNumberFormat('#,##0'); rows.getRange('G2:H').setNumberFormat('#,##0'); rows.getRange('L2:L').setNumberFormat('#,##0');
+  emp.getRange('J2:J').setNumberFormat('#,##0');
+  emp.getRange('K2:K').setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(COST_CATS, true).build());
   pay.getRange('F2:F').setNumberFormat('#,##0');
   emp.getRange('E2:E').setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(TYPES, true).build());
   emp.getRange('H2:H').setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(['Да', 'Нет'], true).build());
@@ -141,14 +147,17 @@ function readEmps_() {
   return values_(SH_EMP).map((r, i) => ({
     row: i + 2, id: s_(r[0]), name: s_(r[1]), fio: s_(r[2]), role: s_(r[3]),
     type: TYPES.indexOf(s_(r[4])) >= 0 ? s_(r[4]) : 'Месяц', rate: n_(r[5]), card: n_(r[6]),
-    active: s_(r[7]) !== 'Нет', comment: s_(r[8])
+    active: s_(r[7]) !== 'Нет', comment: s_(r[8]),
+    gross: r[9] === '' || r[9] === undefined ? Math.round(n_(r[6]) / (1 - TAX)) : Math.round(n_(r[9])),
+    cat: s_(r[10]) === 'Маркетинг' ? 'Маркетинг' : 'Производство'
   })).filter(e => e.id && e.name);
 }
 function readRows_() {
   return values_(SH_ROWS).map((r, i) => ({
     row: i + 2, month: monthKey_(r[0]), empId: s_(r[1]), name: s_(r[2]), type: s_(r[3]) || 'Месяц', rate: n_(r[4]),
     qty: r[5] === '' || r[5] === null ? '' : n_(r[5]), full: n_(r[6]), card: n_(r[7]), comment: s_(r[8]),
-    by: s_(r[9]), at: r[10] instanceof Date ? fmtDT_(r[10]) : s_(r[10])
+    by: s_(r[9]), at: r[10] instanceof Date ? fmtDT_(r[10]) : s_(r[10]),
+    gross: r[11] === '' || r[11] === undefined || r[11] === null ? Math.round(n_(r[7]) / (1 - TAX)) : Math.round(n_(r[11]))
   })).filter(x => x.month && x.empId);
 }
 function readPays_() {
@@ -168,7 +177,7 @@ function init_(user) {
 // Месяц целиком: строки, выплаты, долг с прошлого месяца и итоги
 function month_(m) {
   if (!/^\d{4}-\d{2}$/.test(m)) throw new Error('ERR_DATA');
-  const rows = readRows_(), pays = readPays_().filter(p => !p.cancelled);
+  const rows = readRows_(), pays = readPays_().filter(p => !p.cancelled), emps = readEmps_();
   const months = Array.from(new Set(rows.map(r => r.month))).sort().filter(x => x <= m);
   // долг переносится из месяца в месяц по каждому сотруднику
   let carry = {};
@@ -179,12 +188,15 @@ function month_(m) {
       const cash = Math.max(0, r.full - r.card);
       const paidCard = sum_(pays.filter(p => p.month === mm && p.empId === r.empId && p.kind === 'Карта'));
       const paidCash = sum_(pays.filter(p => p.month === mm && p.empId === r.empId && p.kind === 'Наличные'));
-      const gross = Math.round(r.card / (1 - TAX));
+      // налоги — только с официального начисления: 12% удерживается + 12% платит компания
+      const gross = r.gross, tax = Math.round(gross * TAX), soc = Math.round(gross * SOC);
+      const e = emps.find(z => z.id === r.empId) || {};
+      const cost = r.full + tax + soc;
       return Object.assign({}, r, {
         cash: cash, prevCard: c.card, prevCash: c.cash, paidCard: paidCard, paidCash: paidCash,
         leftCard: r.card + c.card - paidCard, leftCash: cash + c.cash - paidCash,
-        gross: gross, tax: gross - r.card, inps: Math.round(gross * INPS), soc: Math.round(gross * SOC),
-        cost: r.full + (gross - r.card) + Math.round(gross * SOC)
+        tax: tax, inps: Math.round(gross * INPS), soc: soc, cost: cost,
+        cat: e.cat || 'Производство', costProd: e.cat === 'Маркетинг' ? 0 : cost, costMkt: e.cat === 'Маркетинг' ? cost : 0
       });
     });
     const next = {};
@@ -199,7 +211,7 @@ function month_(m) {
   return {
     month: m, rows: result,
     pays: readPays_().filter(p => p.month === m),
-    total: { full: t('full'), card: t('card'), cash: t('cash'), gross: t('gross'), tax: t('tax'), soc: t('soc'), cost: t('cost'),
+    total: { full: t('full'), card: t('card'), cash: t('cash'), gross: t('gross'), tax: t('tax'), soc: t('soc'), cost: t('cost'), costProd: t('costProd'), costMkt: t('costMkt'),
       paidCard: t('paidCard'), paidCash: t('paidCash'), leftCard: t('leftCard'), leftCash: t('leftCash'), people: result.length }
   };
 }
@@ -214,7 +226,8 @@ function saveRow_(user, x) {
   const rate = money_(x.rate), full = money_(x.full), card = money_(x.card);
   const qty = x.qty === '' || x.qty === null || x.qty === undefined ? '' : Number(String(x.qty).replace(',', '.'));
   if (qty !== '' && (!isFinite(qty) || qty < 0 || qty > 31)) throw new Error('ERR_QTY');
-  sheet_(SH_ROWS).getRange(r.row, 4, 1, 8).setValues([[type, rate, qty, full, card, safe_(x.comment, 300), user.name, new Date()]]);
+  const gross = x.gross === undefined || x.gross === null || x.gross === '' ? r.gross : money_(x.gross);
+  sheet_(SH_ROWS).getRange(r.row, 4, 1, 9).setValues([[type, rate, qty, full, card, safe_(x.comment, 300), user.name, new Date(), gross]]);
   return { ok: true };
 }
 
@@ -267,7 +280,7 @@ function newMonth_(user, m) {
   const out = readEmps_().filter(e => e.active).map(e => {
     const qty = e.type === 'Месяц' ? '' : 0;
     const full = e.type === 'Месяц' ? e.rate : 0;
-    return ["'" + m, e.id, e.name, e.type, e.rate, qty, full, e.card, '', user.name, now];
+    return ["'" + m, e.id, e.name, e.type, e.rate, qty, full, e.card, '', user.name, now, e.gross];
   });
   if (!out.length) throw new Error('ERR_NO_EMPS');
   const sh = sheet_(SH_ROWS);
@@ -279,7 +292,9 @@ function newMonth_(user, m) {
 function saveEmp_(user, e) {
   if (!e || !s_(e.name)) throw new Error('ERR_NAME');
   const type = TYPES.indexOf(s_(e.type)) >= 0 ? s_(e.type) : 'Месяц';
-  const vals = [s_(e.name).slice(0, 60), safe_(e.fio, 80), safe_(e.role, 80), type, money_(e.rate), money_(e.card), e.active === false ? 'Нет' : 'Да', safe_(e.comment, 300)];
+  const gross = e.gross === undefined || e.gross === '' ? Math.round(money_(e.card) / (1 - TAX)) : money_(e.gross);
+  const vals = [s_(e.name).slice(0, 60), safe_(e.fio, 80), safe_(e.role, 80), type, money_(e.rate), money_(e.card), e.active === false ? 'Нет' : 'Да', safe_(e.comment, 300),
+    gross, s_(e.cat) === 'Маркетинг' ? 'Маркетинг' : 'Производство'];
   const sh = sheet_(SH_EMP), emps = readEmps_();
   if (s_(e.id)) {
     const old = emps.find(z => z.id === s_(e.id));
@@ -292,7 +307,7 @@ function saveEmp_(user, e) {
   const months = Array.from(new Set(readRows_().map(r => r.month))).sort();
   const last = months[months.length - 1];
   if (last && e.addToMonth !== false) {
-    sheet_(SH_ROWS).appendRow(["'" + last, id, vals[0], type, vals[4], type === 'Месяц' ? '' : 0, type === 'Месяц' ? vals[4] : 0, vals[5], '', user.name, new Date()]);
+    sheet_(SH_ROWS).appendRow(["'" + last, id, vals[0], type, vals[4], type === 'Месяц' ? '' : 0, type === 'Месяц' ? vals[4] : 0, vals[5], '', user.name, new Date(), gross]);
   }
   return { id: id };
 }
@@ -313,7 +328,8 @@ function moneyAdd_(user, payRows) {
   const out = rows.map(r => {
     const m = String(r[1]).replace(/^'/, ''), e = emps.find(x => x.id === r[2]) || { name: r[2] };
     const note = 'Зарплата за ' + monthName_(m) + (r[6] ? ' · ' + r[6] : '') + ' · из приложения «Зарплата»';
-    return ['zp-' + r[0], r[3], MONEY_ART.type, MONEY_ART.cat, MONEY_ART.sub, r[5], MONEY_ART.pay,
+    const art = e.cat === 'Маркетинг' ? MONEY_ART_MKT : MONEY_ART;
+    return ['zp-' + r[0], r[3], art.type, art.cat, art.sub, r[5], art.pay,
       '', note, user.name, new Date(), '', '', e.name, '', '', ''];
   });
   const start = sh.getLastRow() + 1;
