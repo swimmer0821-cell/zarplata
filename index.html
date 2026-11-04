@@ -99,6 +99,19 @@ main>.btn{flex:0 0 auto}
 .cost td small{display:block;color:var(--muted);font-size:13px}
 .cost tr.tot td{font-weight:800;border-bottom:2px solid var(--ink)}
 .cost tr.all td{font-size:18px;border-bottom:0}
+.allt table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:8px}
+.allt th{font-size:12px;text-align:right;padding:6px 0 6px 6px;border-bottom:2px solid var(--ink)}
+.allt th:first-child{text-align:left;padding-left:0}
+.allt td{padding:7px 0 7px 4px;border-bottom:1px solid var(--line)}
+.allt td:first-child{padding-left:0;font-size:13px}
+.allt td.num{text-align:right}
+.allt td.num:last-child{font-weight:700}
+.allt .c-card{background:var(--card-bg)} .allt .c-cash{background:var(--cash-bg)}
+.allt th.c-card,.allt th.c-cash{background:none}
+.allt tr.gh td{background:var(--soft);font-size:12px;font-weight:700;text-transform:uppercase;color:var(--muted);padding:8px 6px;max-width:none;white-space:normal}
+.allt tr.gs td{font-weight:700;font-size:13px}
+.allt tr.tt td{font-weight:800;font-size:13px;border-top:2px solid var(--ink);border-bottom:0;padding-top:10px}
+.leg{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;font-weight:600;margin-top:4px}
 .kv{display:grid;grid-template-columns:1fr auto;gap:6px 12px;font-size:16px}
 .kv span:nth-child(even){text-align:right;font-weight:700}
 .menu{display:flex;flex-direction:column}
@@ -320,6 +333,15 @@ function empRow(r){
     <span class="m"><span class="n">${esc(r.name)}</span><span class="s">${esc([e.role, r.type !== 'Месяц' ? (r.qty || 0) + (r.type === 'Смена' ? ' смен' : ' дн.') : ''].filter(Boolean).join(' · ') || SHORT[catOf(r.cat)])}</span></span>
     <span class="r"><span class="f num">${money(r.full)}</span><span class="st ${st.k}">${esc(st.t)}</span></span></button>`;
 }
+function allTable(rows, t){
+  const tr = r => `<tr><td>${esc(r.name)}</td><td class="num c-card">${money(r.card)}</td><td class="num c-cash">${money(r.cash)}</td><td class="num">${money(r.full)}</td></tr>`;
+  return `<div class="panel allt"><b>Все сотрудники за ${esc(mName(S.data.month))}</b>
+    <div class="leg"><span class="c-card">■ Официально (на карту)</span><span class="c-cash">■ Наличные</span><span>■ Итого на руки</span></div>
+    <table><thead><tr><th>Сотрудник</th><th class="c-card">Офиц.</th><th class="c-cash">Нал</th><th>Итого</th></tr></thead>
+    <tbody>${groupRows(rows).map(g => `<tr class="gh"><td colspan="4">${esc(g.cat)}</td></tr>` + g.rows.map(tr).join('') +
+      `<tr class="gs"><td>Итого</td><td class="num c-card">${money(g.rows.reduce((a, r) => a + r.card, 0))}</td><td class="num c-cash">${money(g.rows.reduce((a, r) => a + r.cash, 0))}</td><td class="num">${money(g.full)}</td></tr>`).join('')}
+    <tr class="tt"><td>ВСЕГО<br><small>${t.people} чел.</small></td><td class="num c-card">${money(t.card)}</td><td class="num c-cash">${money(t.cash)}</td><td class="num">${money(t.full)}</td></tr></tbody></table></div>`;
+}
 function showMonth(){
   const ms = S.ref.months, m = S.month, d = S.data;
   const i = ms.indexOf(m), last = ms[ms.length - 1];
@@ -357,6 +379,7 @@ function showMonth(){
     </div>
     <div class="seg" role="group" aria-label="Раздел"><button type="button" data-tab="people" aria-pressed="${tab === 'people'}">Сотрудники</button><button type="button" data-tab="cost" aria-pressed="${tab === 'cost'}">Затраты</button></div>
     ${tab === 'people' ? people : costTable(t)}
+    ${allTable(d.rows, t)}
     <div class="panel" style="padding:0"><div class="menu">
       <button type="button" id="mEmps">Список и оклады сотрудников</button>
       <button type="button" id="mAll" ${left > 0 ? '' : 'disabled'}>Выдать всем сразу</button>
