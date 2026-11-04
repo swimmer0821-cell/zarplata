@@ -35,10 +35,11 @@ button{cursor:pointer}
 .top{position:sticky;top:0;z-index:5;background:var(--acc);color:var(--acc-ink);display:flex;align-items:center;gap:10px;padding:8px 12px;padding-top:calc(8px + env(safe-area-inset-top,0px));min-height:58px}
 .top h1{font-size:19px;margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tbtn{background:rgba(255,255,255,.12);border:0;color:var(--acc-ink);border-radius:12px;min-height:44px;padding:6px 14px;font-weight:600;font-size:16px}
-main{padding:14px 14px calc(28px + env(safe-area-inset-bottom,0px));max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+main{padding:12px 12px calc(28px + env(safe-area-inset-bottom,0px));max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
 h2{font-size:22px;margin:2px 0 0} h3{font-size:15px;margin:8px 4px 0;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
 .hint{color:var(--muted);font-size:15px;margin:0}
 .panel{background:var(--surf);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}
+.allt.panel{padding:10px 10px 6px}
 .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
 .tile{border:1px solid var(--line);background:var(--surf);border-radius:var(--r);min-height:76px;padding:12px 14px;text-align:left;font-size:18px;font-weight:600}
 .display{border:1px solid var(--line);border-radius:var(--r);padding:12px;font-size:34px;font-weight:700;text-align:center;letter-spacing:.4em;background:var(--surf)}
@@ -62,9 +63,10 @@ main>.btn{flex:0 0 auto}
 /* Месяц */
 .mnav{display:flex;align-items:center;gap:8px;background:var(--surf);border:1px solid var(--line);border-radius:999px;padding:4px}
 .mnav h2{flex:1;text-align:center;margin:0;font-size:19px}
-.mnav button{width:48px;height:44px;border:0;border-radius:999px;background:var(--soft);font-size:24px;font-weight:700}
+.mnav button{width:44px;height:40px;border:0;border-radius:999px;background:var(--soft);font-size:24px;font-weight:700}
 .mnav button:disabled{opacity:.3}
-.hero{background:var(--acc);color:var(--acc-ink);border-radius:var(--r);padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+.hero{background:var(--acc);color:var(--acc-ink);border-radius:var(--r);padding:12px 16px;display:flex;flex-direction:column;gap:8px}
+.hl{display:flex;justify-content:space-between;align-items:baseline;gap:10px}.hl b{font-size:24px}
 .hero .lbl{font-size:14px;opacity:.8;font-weight:600}
 .hero .big{font-size:32px;font-weight:800;line-height:1.1}
 .bar{height:8px;border-radius:99px;background:rgba(255,255,255,.18);overflow:hidden}
@@ -75,10 +77,10 @@ main>.btn{flex:0 0 auto}
 .seg{display:grid;grid-template-columns:1fr 1fr;background:var(--soft);border-radius:14px;padding:4px;gap:4px}
 .seg button{min-height:44px;border:0;border-radius:11px;background:transparent;font-weight:700;font-size:16px;color:var(--muted)}
 .seg button[aria-pressed="true"]{background:var(--surf);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
-.search{width:100%;min-height:50px;border:1px solid var(--line);border-radius:14px;padding:8px 14px;font-size:17px;background:var(--surf)}
+.search{width:100%;min-height:46px;border:1px solid var(--line);border-radius:14px;padding:8px 14px;font-size:17px;background:var(--surf)}
 .fl{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
 .fl::-webkit-scrollbar{display:none}
-.fl button{flex:0 0 auto;min-height:40px;padding:6px 14px;border:1px solid var(--line);border-radius:999px;background:var(--surf);font-size:15px;font-weight:600;white-space:nowrap}
+.fl button{flex:0 0 auto;min-height:38px;padding:4px 12px;border:1px solid var(--line);border-radius:999px;background:var(--surf);font-size:15px;font-weight:600;white-space:nowrap}
 .fl button[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
 .list{background:var(--surf);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
 .ghead{display:flex;justify-content:space-between;align-items:center;padding:10px 16px 6px;font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;background:var(--soft)}
@@ -100,7 +102,7 @@ main>.btn{flex:0 0 auto}
 .cost tr.tot td{font-weight:800;border-bottom:2px solid var(--ink)}
 .cost tr.all td{font-size:18px;border-bottom:0}
 .allt table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:8px}
-.allt th{font-size:12px;text-align:right;padding:6px 0 6px 6px;border-bottom:2px solid var(--ink)}
+.allt th{font-size:11px;text-align:right;padding:6px 0 6px 6px;border-bottom:2px solid var(--ink)}
 .allt th:first-child{text-align:left;padding-left:0}
 .allt td{padding:7px 0 7px 4px;border-bottom:1px solid var(--line)}
 .allt td:first-child{padding-left:0;font-size:13px}
@@ -110,6 +112,8 @@ main>.btn{flex:0 0 auto}
 .allt th.c-card,.allt th.c-cash{background:none}
 .allt tr.gh td{background:var(--soft);font-size:12px;font-weight:700;text-transform:uppercase;color:var(--muted);padding:8px 6px;max-width:none;white-space:normal}
 .allt tr.gs td{font-weight:700;font-size:13px}
+.allt tr[data-id]{cursor:pointer}.allt tr[data-id]:active td{background:var(--soft)}
+.allt td .st{display:block;font-size:11px;font-weight:700;margin-top:1px}
 .allt tr.tt td{font-weight:800;font-size:13px;border-top:2px solid var(--ink);border-bottom:0;padding-top:10px}
 .leg{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;font-weight:600;margin-top:4px}
 .kv{display:grid;grid-template-columns:1fr auto;gap:6px 12px;font-size:16px}
@@ -334,14 +338,14 @@ function empRow(r){
     <span class="r"><span class="f num">${money(r.full)}</span><span class="st ${st.k}">${esc(st.t)}</span></span></button>`;
 }
 function allTable(rows, t){
-  const tr = r => `<tr><td>${esc(r.name)}</td><td class="num c-card">${money(r.card)}</td><td class="num c-cash">${money(r.cash)}</td><td class="num">${money(r.full)}</td></tr>`;
-  return `<div class="panel allt"><b>Все сотрудники за ${esc(mName(S.data.month))}</b>
-    <div class="leg"><span class="c-card">■ Официально (на карту)</span><span class="c-cash">■ Наличные</span><span>■ Итого на руки</span></div>
-    <table><thead><tr><th>Сотрудник</th><th class="c-card">Офиц.</th><th class="c-cash">Нал</th><th>Итого</th></tr></thead>
+  const tr = r => { const st = status(r); return `<tr data-id="${esc(r.empId)}" tabindex="0" role="button"><td>${esc(r.name)}<span class="st ${st.k}">${st.k === 'done' ? '✓ выдано' : st.k === 'chk' ? '! проверить' : 'не выдано'}</span></td><td class="num c-card">${money(r.card)}</td><td class="num c-cash">${money(r.cash)}</td><td class="num">${money(r.full)}</td></tr>`; };
+  return `<div class="panel allt"><span class="hint" style="display:block;font-size:13px">Нажмите на строку, чтобы выдать или исправить</span>
+    <table><thead><tr><th>Сотрудник</th><th class="c-card">Официально</th><th class="c-cash">Наличные</th><th>Итого</th></tr></thead>
     <tbody>${groupRows(rows).map(g => `<tr class="gh"><td colspan="4">${esc(g.cat)}</td></tr>` + g.rows.map(tr).join('') +
       `<tr class="gs"><td>Итого</td><td class="num c-card">${money(g.rows.reduce((a, r) => a + r.card, 0))}</td><td class="num c-cash">${money(g.rows.reduce((a, r) => a + r.cash, 0))}</td><td class="num">${money(g.full)}</td></tr>`).join('')}
     <tr class="tt"><td>ВСЕГО<br><small>${t.people} чел.</small></td><td class="num c-card">${money(t.card)}</td><td class="num c-cash">${money(t.cash)}</td><td class="num">${money(t.full)}</td></tr></tbody></table></div>`;
 }
+function sumRows(rows){ const z = k => rows.reduce((a, r) => a + (Number(r[k]) || 0), 0); return { card: z('card'), cash: z('cash'), full: z('full'), people: rows.length }; }
 function showMonth(){
   const ms = S.ref.months, m = S.month, d = S.data;
   const i = ms.indexOf(m), last = ms[ms.length - 1];
@@ -368,18 +372,15 @@ function showMonth(){
     <input class="search" id="q" type="search" placeholder="Найти сотрудника" value="${esc(S.q)}" aria-label="Найти сотрудника">
     <div class="fl" role="group" aria-label="Статус">${fbtn('all', 'Все', cnt.all)}${fbtn('left', 'Не выдано', cnt.left)}${fbtn('done', 'Выдано', cnt.done)}${cnt.chk ? fbtn('chk', 'Проверить', cnt.chk) : ''}</div>
     <div class="fl" role="group" aria-label="Группа"><button type="button" data-fg="all" aria-pressed="${fg === 'all'}">Все группы</button>${CATS.map(c => `<button type="button" data-fg="${esc(c)}" aria-pressed="${fg === c}">${esc(SHORT[c])}</button>`).join('')}</div>
-    ${rows.length ? `<div class="list">${groupRows(rows).map(g => `<div class="ghead"><span>${esc(g.cat)} · ${g.rows.length}</span><span class="num">${money(g.full)}</span></div>` + g.rows.map(empRow).join('')).join('')}</div>`
-      : '<p class="hint">Никого не найдено.</p>'}`;
+    ${rows.length ? allTable(rows, rows.length === d.rows.length ? t : sumRows(rows)) : '<p class="hint">Никого не найдено.</p>'}`;
   screen('Зарплата', `${nav}
     <div class="hero">
-      <div><div class="lbl">Осталось выдать</div><div class="big num">${money(left)}</div></div>
+      <div class="hl"><span class="lbl">Осталось выдать</span><b class="num">${money(left)}</b></div>
       <div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div>
-      <div class="hg"><div><span>На карту</span><b class="num">${money(Math.max(0, t.leftCard))}</b></div><div><span>Наличными</span><b class="num">${money(Math.max(0, t.leftCash))}</b></div></div>
-      <div class="lbl num">Выдано ${money(paid)} · фонд ${money(t.full)} · ${t.people} чел.</div>
+      <div class="lbl num">карта ${money(Math.max(0, t.leftCard))} · нал ${money(Math.max(0, t.leftCash))} · выдано ${money(paid)}</div>
     </div>
-    <div class="seg" role="group" aria-label="Раздел"><button type="button" data-tab="people" aria-pressed="${tab === 'people'}">Сотрудники</button><button type="button" data-tab="cost" aria-pressed="${tab === 'cost'}">Затраты</button></div>
+    <div class="seg" role="group" aria-label="Раздел"><button type="button" data-tab="people" aria-pressed="${tab === 'people'}">Ведомость</button><button type="button" data-tab="cost" aria-pressed="${tab === 'cost'}">Затраты</button></div>
     ${tab === 'people' ? people : costTable(t)}
-    ${allTable(d.rows, t)}
     <div class="panel" style="padding:0"><div class="menu">
       <button type="button" id="mEmps">Список и оклады сотрудников</button>
       <button type="button" id="mAll" ${left > 0 ? '' : 'disabled'}>Выдать всем сразу</button>
@@ -392,7 +393,7 @@ function showMonth(){
   $app.querySelectorAll('[data-fg]').forEach(b => b.onclick = () => { S.fg = b.dataset.fg; showMonth(); });
   const qi = document.getElementById('q');
   if (qi) qi.oninput = () => { S.q = qi.value; const pos = qi.selectionStart; showMonth(); const n = document.getElementById('q'); n.focus(); n.setSelectionRange(pos, pos); };
-  $app.querySelectorAll('[data-id]').forEach(b => b.onclick = () => showRow(b.dataset.id));
+  $app.querySelectorAll('[data-id]').forEach(b => { b.onclick = () => showRow(b.dataset.id); b.onkeydown = (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); showRow(b.dataset.id); } }; });
   if (document.getElementById('mOpen')) document.getElementById('mOpen').onclick = () => openNew(nextM);
   document.getElementById('mEmps').onclick = showEmps;
   document.getElementById('mAll').onclick = () => {
