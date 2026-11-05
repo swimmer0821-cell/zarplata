@@ -98,7 +98,7 @@ main>.btn,.dlg>.btn{flex:0 0 auto}
 .emp .r{text-align:right}
 .emp .f{display:block;font-weight:800;font-size:17px}
 .st{display:block;font-size:13px;font-weight:700}
-.st.left{color:var(--warn)} .st.done{color:var(--cash)} .st.chk{color:var(--red)}
+.st.left,.st .left{color:var(--warn)} .st.done,.st .done{color:var(--cash)} .st.chk{color:var(--red)}
 .c-card{color:var(--card)} .c-cash{color:var(--cash)} .c-red{color:var(--red)}
 .cost table{width:100%;border-collapse:collapse;font-size:16px}
 .cost td{padding:9px 0;border-bottom:1px solid var(--line);vertical-align:top}
@@ -307,8 +307,8 @@ function status(r){
   const l = r.leftCard + r.leftCash, paid = r.paidCard + r.paidCash;
   if (needCheck(r)) return { k: 'chk', t: 'проверить' };
   if (l <= 0) return { k: 'done', t: 'выдано' };
-  if (r.leftCard <= 0 && paid > 0) return { k: 'left', t: 'карта ✓, нал ' + money(r.leftCash) };
-  if (r.leftCash <= 0 && paid > 0) return { k: 'left', t: 'нал ✓, карта ' + money(r.leftCard) };
+  if (r.leftCard <= 0 && paid > 0) return { k: 'left', t: 'карта ✓, нал ' + money(r.leftCash), parts: [['done', 'карта ✓'], ['left', 'нал ' + money(r.leftCash)]] };
+  if (r.leftCash <= 0 && paid > 0) return { k: 'left', t: 'нал ✓, карта ' + money(r.leftCard), parts: [['done', 'нал ✓'], ['left', 'карта ' + money(r.leftCard)]] };
   if (paid > 0) return { k: 'left', t: 'осталось ' + money(l) };
   return { k: 'left', t: 'осталось ' + money(l) };
 }
@@ -349,7 +349,7 @@ function empRow(r){
     <span class="r"><span class="f num">${money(r.full)}</span><span class="st ${st.k}">${esc(st.t)}</span></span></button>`;
 }
 function allTable(rows, t){
-  const tr = r => { const st = status(r); return `<tr data-id="${esc(r.empId)}" tabindex="0" role="button"><td>${esc(r.name)}${r.miss || r.extra ? `<span class="st" style="color:var(--muted)">${r.miss ? '−' + r.miss + ' дн. ' : ''}${r.extra ? '+' + r.extra + ' дн.' : ''}</span>` : ''}<span class="st ${st.k}">${st.k === 'done' ? '✓ выдано' : st.k === 'chk' ? '! проверить' : esc(st.t.replace('осталось ', 'не выдано: '))}</span></td><td class="num c-card">${money(r.card)}</td><td class="num c-cash">${money(r.cash)}</td><td class="num c-adv">${r.adv ? money(r.adv) : '—'}</td><td class="num">${money(r.full)}</td></tr>`; };
+  const tr = r => { const st = status(r); return `<tr data-id="${esc(r.empId)}" tabindex="0" role="button"><td>${esc(r.name)}${r.miss || r.extra ? `<span class="st" style="color:var(--muted)">${r.miss ? '−' + r.miss + ' дн. ' : ''}${r.extra ? '+' + r.extra + ' дн.' : ''}</span>` : ''}<span class="st ${st.k}">${st.parts ? st.parts.map(x => `<span class="${x[0]}">${esc(x[1])}</span>`).join(', ') : st.k === 'done' ? '✓ выдано' : st.k === 'chk' ? '! проверить' : esc(st.t.replace('осталось ', 'не выдано: '))}</span></td><td class="num c-card">${money(r.card)}</td><td class="num c-cash">${money(r.cash)}</td><td class="num c-adv">${r.adv ? money(r.adv) : '—'}</td><td class="num">${money(r.full)}</td></tr>`; };
   return `<div class="panel allt"><span class="hint" style="display:block;font-size:13px">Нажмите на строку, чтобы выдать или исправить</span>
     <table><thead><tr><th>Сотрудник</th><th class="c-card">Официально</th><th class="c-cash">Наличные</th><th class="c-adv">Аванс</th><th>Итого</th></tr></thead>
     <tbody>${groupRows(rows).map(g => `<tr class="gh"><td colspan="5">${esc(g.cat)}</td></tr>` + g.rows.map(tr).join('') +
