@@ -297,9 +297,12 @@ function newMonth_(user, m) {
   const rows = readRows_();
   if (rows.some(r => r.month === m)) return { exists: true };
   const now = new Date();
+  // смены и дни берём из последнего месяца сотрудника (как было), чтобы наличные считались сразу; потом можно поправить
+  const lastQty = {};
+  rows.filter(r => r.month < m).sort((a, b) => a.month < b.month ? -1 : 1).forEach(r => { if (r.qty !== '') lastQty[r.empId] = Number(r.qty) || 0; });
   const out = readEmps_().filter(e => e.active).map(e => {
-    const qty = e.type === 'Месяц' ? '' : 0;
-    const full = e.type === 'Месяц' ? e.rate : 0;
+    const qty = e.type === 'Месяц' ? '' : (lastQty[e.id] || 0);
+    const full = e.type === 'Месяц' ? e.rate : Math.round(e.rate * qty);
     return ["'" + m, e.id, e.name, e.type, e.rate, qty, full, e.card, '', user.name, now, e.gross, 0, 0, ''];
   });
   if (!out.length) throw new Error('ERR_NO_EMPS');
