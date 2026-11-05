@@ -115,6 +115,7 @@ main>.btn,.dlg>.btn{flex:0 0 auto}
 .allt td.num:last-child{font-weight:700}
 .allt .c-card{background:var(--card-bg)} .allt .c-cash{background:var(--cash-bg)} .allt .c-adv{background:var(--warn-bg);color:var(--warn)}
 .allt th.c-adv{background:none}
+.allt td.c-adv{cursor:pointer;font-weight:700}
 .allt th.c-card,.allt th.c-cash{background:none}
 .allt tr.gh td{background:var(--soft);font-size:12px;font-weight:700;text-transform:uppercase;color:var(--muted);padding:8px 6px;max-width:none;white-space:normal}
 .allt tr.gs td{font-weight:700;font-size:13px}
@@ -357,7 +358,7 @@ function empRow(r){
     <span class="r"><span class="f num">${money(r.full)}</span><span class="st ${st.k}">${esc(st.t)}</span></span></button>`;
 }
 function allTable(rows, t){
-  const tr = r => { const st = status(r); return `<tr data-id="${esc(r.empId)}" tabindex="0" role="button"><td>${esc(r.name)}${r.miss || r.extra ? `<span class="st" style="color:var(--muted)">${r.miss ? '−' + r.miss + ' дн. ' : ''}${r.extra ? '+' + r.extra + ' дн.' : ''}</span>` : ''}<span class="st ${st.k}">${st.parts ? st.parts.map(x => `<span class="${x[0]}">${esc(x[1])}</span>`).join(', ') : st.k === 'done' ? '✓ выдано' : st.k === 'chk' ? '! проверить' : esc(st.t.replace('осталось ', 'не выдано: '))}</span></td><td class="num c-card">${money(r.card)}</td><td class="num c-cash">${money(r.cash)}</td><td class="num c-adv">${r.adv ? money(r.adv) : '—'}</td><td class="num">${money(r.full)}</td></tr>`; };
+  const tr = r => { const st = status(r); return `<tr data-id="${esc(r.empId)}" tabindex="0" role="button"><td>${esc(r.name)}${r.miss || r.extra ? `<span class="st" style="color:var(--muted)">${r.miss ? '−' + r.miss + ' дн. ' : ''}${r.extra ? '+' + r.extra + ' дн.' : ''}</span>` : ''}<span class="st ${st.k}">${st.parts ? st.parts.map(x => `<span class="${x[0]}">${esc(x[1])}</span>`).join(', ') : st.k === 'done' ? '✓ выдано' : st.k === 'chk' ? '! проверить' : esc(st.t.replace('осталось ', 'не выдано: '))}</span></td><td class="num c-card">${money(r.card)}</td><td class="num c-cash">${money(r.cash)}</td><td class="num c-adv" data-advid="${esc(r.empId)}" title="Выдать аванс">${r.adv ? money(r.adv) : '+'}</td><td class="num">${money(r.full)}</td></tr>`; };
   return `<div class="panel allt"><span class="hint" style="display:block;font-size:13px">Нажмите на строку, чтобы выдать или исправить</span>
     <table><thead><tr><th>Сотрудник</th><th class="c-card">Официально</th><th class="c-cash">Наличные</th><th class="c-adv">Аванс</th><th>Итого</th></tr></thead>
     <tbody>${groupRows(rows).map(g => `<tr class="gh"><td colspan="5">${esc(g.cat)}</td></tr>` + g.rows.map(tr).join('') +
@@ -417,6 +418,7 @@ function showMonth(){
   $app.querySelectorAll('[data-fg]').forEach(b => b.onclick = () => { S.fg = b.dataset.fg; showMonth(); });
   const qi = document.getElementById('q');
   if (qi) qi.oninput = () => { S.q = qi.value; const pos = qi.selectionStart; showMonth(); const n = document.getElementById('q'); n.focus(); n.setSelectionRange(pos, pos); };
+  $app.querySelectorAll('[data-advid]').forEach(c => c.onclick = (ev) => { ev.stopPropagation(); showRow(c.dataset.advid, { adv: true }); });
   $app.querySelectorAll('[data-id]').forEach(b => { b.onclick = () => showRow(b.dataset.id); b.onkeydown = (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); showRow(b.dataset.id); } }; });
   if (document.getElementById('mOpen')) document.getElementById('mOpen').onclick = () => openNew(nextM);
   document.getElementById('mEmps').onclick = showEmps;
@@ -459,7 +461,7 @@ async function openNew(m){
 }
 
 /* ================= СОТРУДНИК В МЕСЯЦЕ ================= */
-function showRow(empId){
+function showRow(empId, opt){
   const r = S.data.rows.find(x => x.empId === empId); if (!r) return showMonth();
   const e = empOf(empId);
   const f = { type: r.type, rate: r.rate, qty: r.qty === '' ? '' : r.qty, full: r.full, card: r.card, gross: r.gross, comment: r.comment, manual: false,
@@ -585,18 +587,21 @@ function showRow(empId){
       document.getElementById('cNo').onclick = () => { box.innerHTML = ''; };
       document.getElementById('cYes').onclick = async () => { try { await api('cancelPay', { id: b.dataset.cancel }, 'Отменяю…'); await reloadRow(empId); } catch (er) { showError(er.code, null, () => showRow(empId)); } };
     });
-    const addForm = (kind) => {
+    const addForm = (kind, adv) => {
       const left = kind === 'Карта' ? r.leftCard : r.leftCash;
       const box = document.getElementById('addBox');
-      box.innerHTML = `<div class="dlg"><b>${kind === 'Карта' ? 'Выдано на карту' : 'Выдано наличными'}</b>
-        <div class="form two"><div class="field"><label class="label" for="pSum">Сумма</label><input class="txt money num" id="pSum" inputmode="numeric" value="${money(Math.max(0, left))}"></div>
+      box.innerHTML = `<div class="dlg"><b>${adv ? 'Выдать аванс' : kind === 'Карта' ? 'Выдано на карту' : 'Выдано наличными'}</b>
+        ${adv ? `<div class="chips"><button class="chip" type="button" data-ak="Наличные" aria-pressed="${kind === 'Наличные'}">Наличными</button><button class="chip" type="button" data-ak="Карта" aria-pressed="${kind === 'Карта'}">На карту</button></div>` : ''}
+        <div class="form two"><div class="field"><label class="label" for="pSum">Сумма</label><input class="txt money num" id="pSum" inputmode="numeric" value="${adv ? '' : money(Math.max(0, left))}" placeholder="${adv ? 'сумма аванса' : ''}"></div>
         <div class="field"><label class="label" for="pDate">Дата</label><input class="txt" type="date" id="pDate" value="${esc(S.ref.today)}" max="${esc(S.ref.today)}"></div></div>
-        ${S.data.total.adv !== undefined ? '<label class="chk"><input type="checkbox" id="pAdv"> Это аванс</label>' : ''}
+        ${S.data.total.adv !== undefined ? `<label class="chk"><input type="checkbox" id="pAdv" ${adv ? 'checked' : ''}> Это аванс</label>` : ''}
         <div class="field"><label class="label" for="pCmt">Комментарий <em>(необязательно)</em></label><input class="txt" id="pCmt" maxlength="200"></div>
         ${kind === 'Наличные' ? '<p class="hint">Эта выдача сама запишется в «Деньги» расходом из кассы «Наличные».</p>' : ''}
         <div class="actions"><button class="btn ${kind === 'Карта' ? 'card' : 'cash'}" id="pOk" type="button">Записать</button><button class="btn ghost" id="pNo" type="button">Отмена</button></div></div>`;
       box.scrollIntoView({ block: 'center' });
+      box.querySelectorAll('[data-ak]').forEach(b => b.onclick = () => addForm(b.dataset.ak, true));
       const sumEl = document.getElementById('pSum');
+      if (adv) sumEl.focus();
       sumEl.onblur = () => { sumEl.value = money(digits(sumEl.value)); };
       document.getElementById('pNo').onclick = () => { box.innerHTML = ''; };
       const pid = newId();
@@ -609,6 +614,7 @@ function showRow(empId){
     };
     document.getElementById('aCard').onclick = () => addForm('Карта');
     document.getElementById('aCash').onclick = () => addForm('Наличные');
+    if (opt && opt.adv) { const o = opt; opt = null; addForm('Наличные', true); }
   };
   const keep = () => { const c = document.getElementById('cmt'); if (c) f.comment = c.value; };
   draw();
