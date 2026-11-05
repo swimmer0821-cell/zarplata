@@ -48,7 +48,8 @@ const MONEY_ART_MKT = { type: 'Расход', cat: 'Реклама и продв
 
 const EMP_H = ['ID', 'Имя', 'ФИО (официально)', 'Должность / заметка', 'Способ', 'Ставка', 'На карту (обычно)', 'Работает', 'Комментарий', 'Начислено официально (обычно)', 'Статья затрат'];
 const ROW_H = ['Месяц', 'ID сотрудника', 'Имя', 'Способ', 'Ставка', 'Кол-во смен/дней', 'Полная ЗП', 'На карту', 'Комментарий', 'Изменил', 'Когда', 'Начислено официально', 'Пропущено дней', 'Лишних дней', 'Норма дней (пусто = сама)'];
-const PAY_H = ['ID', 'Месяц', 'ID сотрудника', 'Дата', 'Вид', 'Сумма', 'Комментарий', 'Кто', 'Когда', 'Статус'];
+const PAY_H = ['ID', 'Месяц', 'ID сотрудника', 'Дата', 'Вид', 'Сумма', 'Комментарий', 'Кто', 'Когда', 'Статус', 'Тип'];
+const ADV = 'Аванс';
 const USER_H = ['Пользователь', 'PIN'];
 
 function onOpen() {
@@ -171,7 +172,7 @@ function readPays_() {
     row: i + 2, id: s_(r[0]), month: monthKey_(r[1]), empId: s_(r[2]),
     date: r[3] instanceof Date ? Utilities.formatDate(r[3], TIMEZONE, 'yyyy-MM-dd') : s_(r[3]),
     kind: s_(r[4]), sum: n_(r[5]), comment: s_(r[6]), by: s_(r[7]), at: r[8] instanceof Date ? fmtDT_(r[8]) : s_(r[8]),
-    cancelled: s_(r[9]) === CANCELLED
+    cancelled: s_(r[9]) === CANCELLED, adv: s_(r[10]) === ADV
   })).filter(p => p.id && p.month);
 }
 
@@ -194,12 +195,13 @@ function month_(m) {
       const cash = Math.max(0, r.full - r.card);
       const paidCard = sum_(pays.filter(p => p.month === mm && p.empId === r.empId && p.kind === 'Карта'));
       const paidCash = sum_(pays.filter(p => p.month === mm && p.empId === r.empId && p.kind === 'Наличные'));
+      const adv = sum_(pays.filter(p => p.month === mm && p.empId === r.empId && p.adv));
       // налоги — только с официального начисления: 12% удерживается + 12% платит компания
       const gross = r.gross, tax = Math.round(gross * TAX), soc = Math.round(gross * SOC);
       const e = emps.find(z => z.id === r.empId) || {};
       const cost = r.full + tax + soc;
       return Object.assign({}, r, {
-        cash: cash, prevCard: c.card, prevCash: c.cash, paidCard: paidCard, paidCash: paidCash,
+        cash: cash, prevCard: c.card, prevCash: c.cash, paidCard: paidCard, paidCash: paidCash, adv: adv,
         leftCard: r.card + c.card - paidCard, leftCash: cash + c.cash - paidCash,
         tax: tax, inps: Math.round(gross * INPS), soc: soc, cost: cost,
         cat: e.cat || 'Производственный персонал'
@@ -225,7 +227,7 @@ function month_(m) {
     month: m, rows: result,
     pays: readPays_().filter(p => p.month === m),
     total: { full: t('full'), card: t('card'), cash: t('cash'), gross: t('gross'), tax: t('tax'), soc: t('soc'), cost: t('cost'), costProd: costProd, costFull: t('cost'), byCat: byCat,
-      paidCard: t('paidCard'), paidCash: t('paidCash'), leftCard: t('leftCard'), leftCash: t('leftCash'), people: result.length }
+      paidCard: t('paidCard'), paidCash: t('paidCash'), adv: t('adv'), leftCard: t('leftCard'), leftCash: t('leftCash'), people: result.length }
   };
 }
 
@@ -258,7 +260,7 @@ function addPay_(user, p) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date > today_()) throw new Error('ERR_DATE');
   const pid = s_(p.id) || Utilities.getUuid();
   if (readPays_().some(z => z.id === pid)) return { id: pid, duplicate: true };
-  const row = [pid, "'" + m, id, dateObj_(date), s_(p.kind), sum, safe_(p.comment, 200), user.name, new Date(), ''];
+  const row = [pid, "'" + m, id, dateObj_(date), s_(p.kind), sum, safe_(p.comment, 200), user.name, new Date(), '', p.adv ? ADV : ''];
   moneyAdd_(user, [row]);                      // сначала «Деньги»: если не получилось — выплату не записываем
   sheet_(SH_PAY).appendRow(row);
   return { id: pid };
@@ -266,13 +268,15 @@ function addPay_(user, p) {
 
 // «Выдано всё»: записывает выплаты на весь остаток — одному сотруднику или всем в месяце
 function payAll_(user, m, kind, empId) {
-  if (PAY_KINDS.indexOf(s_(kind)) < 0) throw new Error('ERR_DATA');
+  // kind: 'Карта', 'Наличные' или 'Всё' (и карта, и наличные сразу)
+  const kinds = s_(kind) === 'Всё' ? PAY_KINDS.slice() : [s_(kind)];
+  if (kinds.some(k => PAY_KINDS.indexOf(k) < 0)) throw new Error('ERR_DATA');
   const d = month_(m), now = new Date(), date = today_();
   const out = [];
-  d.rows.filter(r => !empId || r.empId === s_(empId)).forEach(r => {
-    const left = kind === 'Карта' ? r.leftCard : r.leftCash;
-    if (left > 0) out.push([Utilities.getUuid(), "'" + m, r.empId, dateObj_(date), kind, left, 'выдано всё', user.name, now, '']);
-  });
+  d.rows.filter(r => !empId || r.empId === s_(empId)).forEach(r => kinds.forEach(k => {
+    const left = k === 'Карта' ? r.leftCard : r.leftCash;
+    if (left > 0) out.push([Utilities.getUuid(), "'" + m, r.empId, dateObj_(date), k, left, 'выдано всё', user.name, now, '', '']);
+  }));
   if (out.length) { moneyAdd_(user, out); const sh = sheet_(SH_PAY); sh.getRange(sh.getLastRow() + 1, 1, out.length, out[0].length).setValues(out); }
   return { count: out.length };
 }
@@ -343,7 +347,7 @@ function moneyAdd_(user, payRows) {
   const emps = readEmps_();
   const out = rows.map(r => {
     const m = String(r[1]).replace(/^'/, ''), e = emps.find(x => x.id === r[2]) || { name: r[2] };
-    const note = 'Зарплата за ' + monthName_(m) + (r[6] ? ' · ' + r[6] : '') + ' · из приложения «Зарплата»';
+    const note = (r[10] === ADV ? 'Аванс' : 'Зарплата') + ' за ' + monthName_(m) + (r[6] ? ' · ' + r[6] : '') + ' · из приложения «Зарплата»';
     const art = e.cat === 'Маркетинг' ? MONEY_ART_MKT : MONEY_ART;
     return ['zp-' + r[0], r[3], art.type, art.cat, art.sub, r[5], art.pay,
       '', note, user.name, new Date(), '', '', e.name, '', '', ''];

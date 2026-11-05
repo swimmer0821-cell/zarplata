@@ -44,7 +44,7 @@ main{padding:12px 12px calc(28px + env(safe-area-inset-bottom,0px));max-width:76
 h2{font-size:22px;margin:2px 0 0} h3{font-size:15px;margin:8px 4px 0;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
 .hint{color:var(--muted);font-size:15px;margin:0}
 .panel{background:var(--surf);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}
-.allt.panel{padding:10px 10px 6px}
+.allt.panel{padding:10px 10px 6px;overflow-x:auto}
 .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
 .tile{border:1px solid var(--line);background:var(--surf);border-radius:var(--r);min-height:76px;padding:12px 14px;text-align:left;font-size:18px;font-weight:600}
 .display{border:1px solid var(--line);border-radius:var(--r);padding:12px;font-size:34px;font-weight:700;text-align:center;letter-spacing:.4em;background:var(--surf)}
@@ -113,13 +113,15 @@ main>.btn{flex:0 0 auto}
 .allt td:first-child{padding-left:0;font-size:13px}
 .allt td.num{text-align:right}
 .allt td.num:last-child{font-weight:700}
-.allt .c-card{background:var(--card-bg)} .allt .c-cash{background:var(--cash-bg)}
+.allt .c-card{background:var(--card-bg)} .allt .c-cash{background:var(--cash-bg)} .allt .c-adv{background:var(--warn-bg);color:var(--warn)}
+.allt th.c-adv{background:none}
 .allt th.c-card,.allt th.c-cash{background:none}
 .allt tr.gh td{background:var(--soft);font-size:12px;font-weight:700;text-transform:uppercase;color:var(--muted);padding:8px 6px;max-width:none;white-space:normal}
 .allt tr.gs td{font-weight:700;font-size:13px}
 .allt tr[data-id]{cursor:pointer}.allt tr[data-id]:active td{background:var(--soft)}
 .allt td .st{display:block;font-size:11px;font-weight:700;margin-top:1px}
 .allt tr.tt td{font-weight:800;font-size:13px;border-top:2px solid var(--ink);border-bottom:0;padding-top:10px}
+@media (max-width:440px){.allt table{font-size:11px}.allt td,.allt th{padding-left:3px}.allt td:first-child{font-size:12px}.allt th{font-size:10px}}
 .leg{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;font-weight:600;margin-top:4px}
 .kv{display:grid;grid-template-columns:1fr auto;gap:6px 12px;font-size:16px}
 .kv span:nth-child(even){text-align:right;font-weight:700}
@@ -172,6 +174,7 @@ details.panel>.in{padding:0 16px 16px;display:flex;flex-direction:column;gap:12p
 .pay .w{flex:1;min-width:0} .pay .w small{display:block;color:var(--muted);font-size:14px}
 .pay.off{opacity:.5;text-decoration:line-through}
 .pay button{min-height:40px;border:1px solid var(--line);border-radius:10px;background:var(--surf);padding:4px 12px;font-size:14px;font-weight:600}
+.chk{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;min-height:44px}.chk input{width:24px;height:24px}
 .dlg{border:2px solid var(--acc);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:12px;background:var(--surf)}
 .stamp{color:var(--muted);font-size:13px;margin:0}
 </style>
@@ -301,9 +304,12 @@ async function openMonth(m){
 }
 function needCheck(r){ return (r.comment && /сверить|уточнить/i.test(r.comment)) || /сверить|уточнить/i.test(empOf(r.empId).comment || ''); }
 function status(r){
-  const l = r.leftCard + r.leftCash;
+  const l = r.leftCard + r.leftCash, paid = r.paidCard + r.paidCash;
   if (needCheck(r)) return { k: 'chk', t: 'проверить' };
   if (l <= 0) return { k: 'done', t: 'выдано' };
+  if (r.leftCard <= 0 && paid > 0) return { k: 'left', t: 'карта ✓, нал ' + money(r.leftCash) };
+  if (r.leftCash <= 0 && paid > 0) return { k: 'left', t: 'нал ✓, карта ' + money(r.leftCard) };
+  if (paid > 0) return { k: 'left', t: 'осталось ' + money(l) };
   return { k: 'left', t: 'осталось ' + money(l) };
 }
 function empOf(id){ return (S.ref.emps || []).find(e => e.id === id) || {}; }
@@ -343,12 +349,12 @@ function empRow(r){
     <span class="r"><span class="f num">${money(r.full)}</span><span class="st ${st.k}">${esc(st.t)}</span></span></button>`;
 }
 function allTable(rows, t){
-  const tr = r => { const st = status(r); return `<tr data-id="${esc(r.empId)}" tabindex="0" role="button"><td>${esc(r.name)}${r.miss || r.extra ? `<span class="st" style="color:var(--muted)">${r.miss ? '−' + r.miss + ' дн. ' : ''}${r.extra ? '+' + r.extra + ' дн.' : ''}</span>` : ''}<span class="st ${st.k}">${st.k === 'done' ? '✓ выдано' : st.k === 'chk' ? '! проверить' : 'не выдано'}</span></td><td class="num c-card">${money(r.card)}</td><td class="num c-cash">${money(r.cash)}</td><td class="num">${money(r.full)}</td></tr>`; };
+  const tr = r => { const st = status(r); return `<tr data-id="${esc(r.empId)}" tabindex="0" role="button"><td>${esc(r.name)}${r.miss || r.extra ? `<span class="st" style="color:var(--muted)">${r.miss ? '−' + r.miss + ' дн. ' : ''}${r.extra ? '+' + r.extra + ' дн.' : ''}</span>` : ''}<span class="st ${st.k}">${st.k === 'done' ? '✓ выдано' : st.k === 'chk' ? '! проверить' : esc(st.t.replace('осталось ', 'не выдано: '))}</span></td><td class="num c-card">${money(r.card)}</td><td class="num c-cash">${money(r.cash)}</td><td class="num c-adv">${r.adv ? money(r.adv) : '—'}</td><td class="num">${money(r.full)}</td></tr>`; };
   return `<div class="panel allt"><span class="hint" style="display:block;font-size:13px">Нажмите на строку, чтобы выдать или исправить</span>
-    <table><thead><tr><th>Сотрудник</th><th class="c-card">Официально</th><th class="c-cash">Наличные</th><th>Итого</th></tr></thead>
-    <tbody>${groupRows(rows).map(g => `<tr class="gh"><td colspan="4">${esc(g.cat)}</td></tr>` + g.rows.map(tr).join('') +
-      `<tr class="gs"><td>Итого</td><td class="num c-card">${money(g.rows.reduce((a, r) => a + r.card, 0))}</td><td class="num c-cash">${money(g.rows.reduce((a, r) => a + r.cash, 0))}</td><td class="num">${money(g.full)}</td></tr>`).join('')}
-    <tr class="tt"><td>ВСЕГО<br><small>${t.people} чел.</small></td><td class="num c-card">${money(t.card)}</td><td class="num c-cash">${money(t.cash)}</td><td class="num">${money(t.full)}</td></tr></tbody></table></div>`;
+    <table><thead><tr><th>Сотрудник</th><th class="c-card">Официально</th><th class="c-cash">Наличные</th><th class="c-adv">Аванс</th><th>Итого</th></tr></thead>
+    <tbody>${groupRows(rows).map(g => `<tr class="gh"><td colspan="5">${esc(g.cat)}</td></tr>` + g.rows.map(tr).join('') +
+      `<tr class="gs"><td>Итого</td><td class="num c-card">${money(g.rows.reduce((a, r) => a + r.card, 0))}</td><td class="num c-cash">${money(g.rows.reduce((a, r) => a + r.cash, 0))}</td><td class="num c-adv">${money(g.rows.reduce((a, r) => a + (r.adv || 0), 0))}</td><td class="num">${money(g.full)}</td></tr>`).join('')}
+    <tr class="tt"><td>ВСЕГО<br><small>${t.people} чел.</small></td><td class="num c-card">${money(t.card)}</td><td class="num c-cash">${money(t.cash)}</td><td class="num c-adv">${money(t.adv || 0)}</td><td class="num">${money(t.full)}</td></tr></tbody></table></div>`;
 }
 // Норма дней для оклада: рабочие — дней в месяце минус 4 выходных; администрация — будние дни (пн–пт)
 function autoNorm(month, cat){
@@ -357,7 +363,7 @@ function autoNorm(month, cat){
   let n = 0; for (let d = 1; d <= dim; d++) { const w = new Date(y, m - 1, d).getDay(); if (w !== 0 && w !== 6) n++; }
   return n;
 }
-function sumRows(rows){ const z = k => rows.reduce((a, r) => a + (Number(r[k]) || 0), 0); return { card: z('card'), cash: z('cash'), full: z('full'), people: rows.length }; }
+function sumRows(rows){ const z = k => rows.reduce((a, r) => a + (Number(r[k]) || 0), 0); return { card: z('card'), cash: z('cash'), adv: z('adv'), full: z('full'), people: rows.length }; }
 function showMonth(){
   const ms = S.ref.months, m = S.month, d = S.data;
   const i = ms.indexOf(m), last = ms[ms.length - 1];
@@ -411,12 +417,13 @@ function showMonth(){
     box.innerHTML = `<div class="dlg"><b>Выдать всем остаток</b><p class="hint">Запишет выплату на весь остаток каждому сотруднику, сегодняшней датой. Наличные сразу попадут в «Деньги».</p>
       <div class="actions"><button class="btn card" id="allCard" type="button" ${t.leftCard > 0 ? '' : 'disabled'}>На карту: ${money(Math.max(0, t.leftCard))}</button>
       <button class="btn cash" id="allCash" type="button" ${t.leftCash > 0 ? '' : 'disabled'}>Наличными: ${money(Math.max(0, t.leftCash))}</button></div>
+      <button class="btn" id="allBoth" type="button" ${t.leftCard > 0 || t.leftCash > 0 ? '' : 'disabled'}>Всё сразу (карта + наличные): ${money(Math.max(0, t.leftCard) + Math.max(0, t.leftCash))}</button>
       <button class="btn ghost" id="allNo" type="button">Отмена</button><div id="allYesBox"></div></div>`;
     box.scrollIntoView({ block: 'center' });
     document.getElementById('allNo').onclick = () => { box.innerHTML = ''; };
-    [['allCard', 'Карта'], ['allCash', 'Наличные']].forEach(([id, kind]) => document.getElementById(id).onclick = () => {
+    [['allCard', 'Карта'], ['allCash', 'Наличные'], ['allBoth', 'Всё']].forEach(([id, kind]) => document.getElementById(id).onclick = () => {
       const y = document.getElementById('allYesBox');
-      y.innerHTML = `<b>Точно записать, что всем выдано ${kind === 'Карта' ? 'на карту' : 'наличными'}?</b>
+      y.innerHTML = `<b>Точно записать, что всем выдано ${kind === 'Карта' ? 'на карту' : kind === 'Наличные' ? 'наличными' : 'всё: и на карту, и наличными'}?</b>
         <div class="actions" style="margin-top:8px"><button class="btn" id="allYes" type="button">Да, записать</button></div>`;
       document.getElementById('allYes').onclick = async () => {
         try { await api('payAll', { month: m, kind }, 'Записываю…'); await openMonth(m); } catch (e) { showError(e.code, null, showMonth); }
@@ -493,7 +500,7 @@ function showRow(empId){
       </div>
       <div id="addBox"></div>
       <div class="panel"><b>Выплаты</b>
-        <div class="pays" style="margin-top:6px">${pays.length ? pays.map(p => `<div class="pay ${p.cancelled ? 'off' : ''}"><div class="w"><b class="${p.kind === 'Карта' ? 'c-card' : 'c-cash'}">${p.kind === 'Карта' ? 'Карта' : 'Наличные'} · <span class="num">${money(p.sum)}</span></b>
+        <div class="pays" style="margin-top:6px">${pays.length ? pays.map(p => `<div class="pay ${p.cancelled ? 'off' : ''}"><div class="w"><b class="${p.kind === 'Карта' ? 'c-card' : 'c-cash'}">${p.adv ? 'Аванс · ' : ''}${p.kind === 'Карта' ? 'Карта' : 'Наличные'} · <span class="num">${money(p.sum)}</span></b>
           <small>${esc(fmtDate(p.date))} · ${esc(p.by)}${p.comment ? ' · ' + esc(p.comment) : ''}${p.cancelled ? ' · отменена' : ''}</small></div>
           ${p.cancelled ? '' : `<button type="button" data-cancel="${esc(p.id)}">Отменить</button>`}</div>`).join('') : '<p class="hint">Пока ничего не выдано.</p>'}</div>
       </div>
@@ -569,7 +576,8 @@ function showRow(empId){
       box.innerHTML = `<div class="dlg"><b>${kind === 'Карта' ? 'Выдано на карту' : 'Выдано наличными'}</b>
         <div class="form two"><div class="field"><label class="label" for="pSum">Сумма</label><input class="txt money num" id="pSum" inputmode="numeric" value="${money(Math.max(0, left))}"></div>
         <div class="field"><label class="label" for="pDate">Дата</label><input class="txt" type="date" id="pDate" value="${esc(S.ref.today)}" max="${esc(S.ref.today)}"></div></div>
-        <div class="field"><label class="label" for="pCmt">Комментарий <em>(например, аванс)</em></label><input class="txt" id="pCmt" maxlength="200"></div>
+        <label class="chk"><input type="checkbox" id="pAdv"> Это аванс</label>
+        <div class="field"><label class="label" for="pCmt">Комментарий <em>(необязательно)</em></label><input class="txt" id="pCmt" maxlength="200"></div>
         ${kind === 'Наличные' ? '<p class="hint">Эта выдача сама запишется в «Деньги» расходом из кассы «Наличные».</p>' : ''}
         <div class="actions"><button class="btn ${kind === 'Карта' ? 'card' : 'cash'}" id="pOk" type="button">Записать</button><button class="btn ghost" id="pNo" type="button">Отмена</button></div></div>`;
       box.scrollIntoView({ block: 'center' });
@@ -580,7 +588,7 @@ function showRow(empId){
       document.getElementById('pOk').onclick = async () => {
         const sum = digits(sumEl.value), date = document.getElementById('pDate').value;
         if (!sum) return sumEl.focus();
-        try { await api('addPay', { pay: { id: pid, month: S.data.month, empId, kind, sum, date, comment: document.getElementById('pCmt').value } }, 'Записываю…'); await reloadRow(empId); }
+        try { await api('addPay', { pay: { id: pid, month: S.data.month, empId, kind, sum, date, comment: document.getElementById('pCmt').value, adv: document.getElementById('pAdv').checked } }, 'Записываю…'); await reloadRow(empId); }
         catch (er) { showError(er.code, null, () => showRow(empId)); }
       };
     };
