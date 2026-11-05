@@ -426,7 +426,11 @@ function showMonth(){
       y.innerHTML = `<b>Точно записать, что всем выдано ${kind === 'Карта' ? 'на карту' : kind === 'Наличные' ? 'наличными' : 'всё: и на карту, и наличными'}?</b>
         <div class="actions" style="margin-top:8px"><button class="btn" id="allYes" type="button">Да, записать</button></div>`;
       document.getElementById('allYes').onclick = async () => {
-        try { await api('payAll', { month: m, kind }, 'Записываю…'); await openMonth(m); } catch (e) { showError(e.code, null, showMonth); }
+        try {
+          if (kind === 'Всё') { if (t.leftCard > 0) await api('payAll', { month: m, kind: 'Карта' }, 'Записываю карту…'); if (t.leftCash > 0) await api('payAll', { month: m, kind: 'Наличные' }, 'Записываю наличные…'); }
+          else await api('payAll', { month: m, kind }, 'Записываю…');
+          await openMonth(m);
+        } catch (e) { showError(e.code, null, showMonth); }
       };
     });
   };
@@ -576,7 +580,7 @@ function showRow(empId){
       box.innerHTML = `<div class="dlg"><b>${kind === 'Карта' ? 'Выдано на карту' : 'Выдано наличными'}</b>
         <div class="form two"><div class="field"><label class="label" for="pSum">Сумма</label><input class="txt money num" id="pSum" inputmode="numeric" value="${money(Math.max(0, left))}"></div>
         <div class="field"><label class="label" for="pDate">Дата</label><input class="txt" type="date" id="pDate" value="${esc(S.ref.today)}" max="${esc(S.ref.today)}"></div></div>
-        <label class="chk"><input type="checkbox" id="pAdv"> Это аванс</label>
+        ${S.data.total.adv !== undefined ? '<label class="chk"><input type="checkbox" id="pAdv"> Это аванс</label>' : ''}
         <div class="field"><label class="label" for="pCmt">Комментарий <em>(необязательно)</em></label><input class="txt" id="pCmt" maxlength="200"></div>
         ${kind === 'Наличные' ? '<p class="hint">Эта выдача сама запишется в «Деньги» расходом из кассы «Наличные».</p>' : ''}
         <div class="actions"><button class="btn ${kind === 'Карта' ? 'card' : 'cash'}" id="pOk" type="button">Записать</button><button class="btn ghost" id="pNo" type="button">Отмена</button></div></div>`;
@@ -588,7 +592,7 @@ function showRow(empId){
       document.getElementById('pOk').onclick = async () => {
         const sum = digits(sumEl.value), date = document.getElementById('pDate').value;
         if (!sum) return sumEl.focus();
-        try { await api('addPay', { pay: { id: pid, month: S.data.month, empId, kind, sum, date, comment: document.getElementById('pCmt').value, adv: document.getElementById('pAdv').checked } }, 'Записываю…'); await reloadRow(empId); }
+        try { await api('addPay', { pay: { id: pid, month: S.data.month, empId, kind, sum, date, comment: document.getElementById('pCmt').value, adv: !!(document.getElementById('pAdv') || {}).checked } }, 'Записываю…'); await reloadRow(empId); }
         catch (er) { showError(er.code, null, () => showRow(empId)); }
       };
     };
