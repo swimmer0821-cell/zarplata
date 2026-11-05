@@ -191,7 +191,7 @@ function month_(m) {
   let result = null;
   months.forEach(mm => {
     const list = rows.filter(r => r.month === mm).map(r => {
-      const c = carry[r.empId] || { card: 0, cash: 0 };
+      const c = { card: 0, cash: 0 };   // долг прошлого месяца не переносится (решение руководителя 05.11.2026)
       const cash = Math.max(0, r.full - r.card);
       const paidCard = sum_(pays.filter(p => p.month === mm && p.empId === r.empId && p.kind === 'Карта'));
       const paidCash = sum_(pays.filter(p => p.month === mm && p.empId === r.empId && p.kind === 'Наличные'));

@@ -296,9 +296,17 @@ function newPin1(p1){
 }
 
 /* ================= МЕСЯЦ ================= */
+// Каждый месяц считается отдельно: долг прошлого месяца не переносится (решение руководителя 05.11.2026)
+function noCarry(d){
+  if (!d || !d.rows) return d;
+  d.rows.forEach(r => { r.leftCard -= (r.prevCard || 0); r.leftCash -= (r.prevCash || 0); r.prevCard = 0; r.prevCash = 0; });
+  const z = k => d.rows.reduce((a, r) => a + (Number(r[k]) || 0), 0);
+  d.total.leftCard = z('leftCard'); d.total.leftCash = z('leftCash');
+  return d;
+}
 async function openMonth(m){
   S.month = m;
-  try { S.data = S.ref.months.includes(m) ? await api('month', { month: m }) : null; }
+  try { S.data = S.ref.months.includes(m) ? noCarry(await api('month', { month: m })) : null; }
   catch (e) { return showError(e.code, () => openMonth(m)); }
   showMonth();
 }
@@ -426,11 +434,15 @@ function showMonth(){
       y.innerHTML = `<b>Точно записать, что всем выдано ${kind === 'Карта' ? 'на карту' : kind === 'Наличные' ? 'наличными' : 'всё: и на карту, и наличными'}?</b>
         <div class="actions" style="margin-top:8px"><button class="btn" id="allYes" type="button">Да, записать</button></div>`;
       document.getElementById('allYes').onclick = async () => {
+        // по каждому сотруднику — только остаток за этот месяц
+        const kinds = kind === 'Всё' ? ['Карта', 'Наличные'] : [kind];
+        const jobs = [];
+        d.rows.forEach(r => kinds.forEach(k => { const left = k === 'Карта' ? r.leftCard : r.leftCash; if (left > 0) jobs.push({ r, k, left, id: newId() }); }));
         try {
-          if (kind === 'Всё') { if (t.leftCard > 0) await api('payAll', { month: m, kind: 'Карта' }, 'Записываю карту…'); if (t.leftCash > 0) await api('payAll', { month: m, kind: 'Наличные' }, 'Записываю наличные…'); }
-          else await api('payAll', { month: m, kind }, 'Записываю…');
+          for (let i = 0; i < jobs.length; i++) { const j = jobs[i];
+            await api('addPay', { pay: { id: j.id, month: m, empId: j.r.empId, kind: j.k, sum: j.left, date: S.ref.today, comment: 'выдано всё' } }, `Записываю ${i + 1} из ${jobs.length}…`); }
           await openMonth(m);
-        } catch (e) { showError(e.code, null, showMonth); }
+        } catch (e) { showError(e.code, null, () => openMonth(m)); }
       };
     });
   };
@@ -495,7 +507,6 @@ function showRow(empId){
           <div class="k2"><span>Наличными</span><b class="num">${money(r.cash)}</b></div>
           <div class="k3"><span>Осталось</span><b class="num">${money(left)}</b></div>
         </div>
-        ${r.prevCard || r.prevCash ? `<p class="hint" style="margin-top:8px">Включая долг с прошлого месяца: карта ${money(r.prevCard)} · нал ${money(r.prevCash)}</p>` : ''}
       </div>
       ${e.comment ? `<div class="warn">${esc(e.comment)}</div>` : ''}
       <div class="actions">
@@ -603,7 +614,7 @@ function showRow(empId){
   draw();
 }
 async function reloadRow(empId){
-  try { S.data = await api('month', { month: S.data.month }); } catch (e) { return showError(e.code, () => reloadRow(empId)); }
+  try { S.data = noCarry(await api('month', { month: S.data.month })); } catch (e) { return showError(e.code, () => reloadRow(empId)); }
   showRow(empId);
 }
 
@@ -658,7 +669,7 @@ function editEmp(e){
     document.getElementById('fSave').onclick = async () => {
       keep();
       if (!f.name.trim()) return document.getElementById('fName').focus();
-      try { await api('saveEmp', { emp: f }, 'Сохраняю…'); S.ref = await api('init'); if (S.ref.months.includes(S.month)) S.data = await api('month', { month: S.month }); showEmps(); }
+      try { await api('saveEmp', { emp: f }, 'Сохраняю…'); S.ref = await api('init'); if (S.ref.months.includes(S.month)) S.data = noCarry(await api('month', { month: S.month })); showEmps(); }
       catch (er) { showError(er.code, null, showEmps); }
     };
   };
