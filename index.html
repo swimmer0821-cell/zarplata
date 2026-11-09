@@ -194,8 +194,10 @@ const $app = document.getElementById('app');
 const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 const ERR = {
   ERR_NET:'Нет связи с интернетом или сервер не ответил. Попробуйте ещё раз.', ERR_CONFIG:'В приложении не указан адрес сервера.',
-  ERR_PIN:'Неверный PIN. Попробуйте ещё раз.', ERR_USER:'Пользователь не найден.', ERR_NO_PIN:'Нужно придумать PIN.',
-  ERR_PIN_EXISTS:'PIN уже задан. Если забыли — попросите руководителя очистить ячейку PIN в таблице.', ERR_PIN_FORMAT:'PIN — это 4 цифры.',
+  ERR_PIN:'Неверный PIN. Попробуйте ещё раз.', ERR_USER:'Пользователь не найден.',
+  ERR_NO_PIN:'PIN не задан. Попросите руководителя вписать вам временный PIN в таблицу (лист «Пользователи»). При входе вы сразу смените его на свой.',
+  ERR_LOCKED:'Слишком много неверных PIN. Вход закрыт на 10 минут.', ERR_PIN_SAME:'Новый PIN должен отличаться от старого.',
+  ERR_NEW_PIN:'Нужно задать новый PIN.', ERR_PIN_FORMAT:'Новый PIN — это 6 цифр.',
   ERR_AMOUNT:'Проверьте сумму.', ERR_DATE:'Проверьте дату: она не может быть в будущем.', ERR_QTY:'Проверьте количество смен или дней.',
   ERR_NAME:'Напишите имя.', ERR_NOT_FOUND:'Запись не найдена. Обновите экран.', ERR_SETUP:'Таблица не настроена.', ERR_DATA:'Ошибка данных. Обновите экран.',
   ERR_NO_EMPS:'Нет сотрудников. Добавьте их в разделе «Сотрудники».',
@@ -235,7 +237,8 @@ function screen(title, html, back){
   $app.innerHTML = html; window.scrollTo(0, 0);
 }
 function showError(code, retry, back){
-  if ((code === 'ERR_PIN' || code === 'ERR_NO_PIN' || code === 'ERR_USER') && S.ref) { logout(); return showLogin(); }
+  if ((code === 'ERR_PIN' || code === 'ERR_NO_PIN' || code === 'ERR_USER' || code === 'ERR_LOCKED') && S.ref) { logout(); return showLogin(); }
+  if (code === 'ERR_NEW_PIN' && S.user && S.pin) return newPinStart(S.pin);
   screen('Ошибка', `<div class="bad" role="alert">${esc(ERR[code] || ERR.ERR_DATA)}</div>
     <div class="actions">${retry ? '<button class="btn" id="eR" type="button">Повторить</button>' : ''}<button class="btn ghost" id="eB" type="button">Назад</button></div>`, back || null);
   if (retry) document.getElementById('eR').onclick = retry;
@@ -246,7 +249,9 @@ function logout(){ S.user = null; S.pin = ''; S.ref = null; store('user', null);
 
 /* ================= ВХОД ================= */
 async function start(){
-  if (S.user && S.pin) { try { return await doInit(); } catch (e) { if (e.code !== 'ERR_NET') logout(); else return showError(e.code, start); } }
+  if (S.user && S.pin) { try { return await doInit(); } catch (e) {
+    if (e.code === 'ERR_NEW_PIN') return newPinStart(S.pin);   // старый PIN — сразу просим новый (09.11.2026)
+    if (e.code !== 'ERR_NET') logout(); else return showError(e.code, start); } }
   showLogin();
 }
 async function doInit(){
@@ -263,22 +268,27 @@ async function showLogin(){
     <div class="tiles">${users.map((u, i) => `<button class="tile" type="button" data-i="${i}">${esc(u.name)}</button>`).join('')}</div>`);
   $app.querySelectorAll('[data-i]').forEach(b => b.onclick = () => {
     const u = users[+b.dataset.i]; S.user = u.name;
-    u.hasPin ? pinScreen(u.name, 'Введите PIN', '', enterPin) : pinScreen(u.name, 'Первый вход. Придумайте PIN из 4 цифр', '', newPin1);
+    pinScreen(u.name, 'Введите PIN', '', enterPin, 0);
   });
 }
-function pinScreen(title, hint, warn, done){
+// len = 6 — ровно 6 цифр, сразу дальше; len = 0 — от 4 до 6 цифр и кнопка «Войти» (старые PIN были из 4 цифр)
+function pinScreen(title, hint, warn, done, len){
   let pin = '';
+  const max = 6;
   const draw = () => {
+    const shown = len ? len : Math.max(4, pin.length);
     screen(title, `<h2>${esc(hint)}</h2>${warn ? `<div class="warn" role="alert">${esc(warn)}</div>` : ''}
-      <div class="display" aria-live="polite">${'●'.repeat(pin.length)}${'○'.repeat(4 - pin.length)}</div>
+      <div class="display" aria-live="polite">${'●'.repeat(pin.length)}${'○'.repeat(Math.max(0, shown - pin.length))}</div>
       <div class="pad">${[1,2,3,4,5,6,7,8,9].map(n => `<button class="key" type="button" data-k="${n}">${n}</button>`).join('')}
-      <span></span><button class="key" type="button" data-k="0">0</button><button class="key wide" type="button" data-k="del">Стереть</button></div>`, showLogin);
+      <button class="key wide" type="button" data-k="del">Стереть</button><button class="key" type="button" data-k="0">0</button>
+      ${len ? '<span></span>' : `<button class="key wide" type="button" data-k="ok"${pin.length >= 4 ? '' : ' disabled'}>Войти</button>`}</div>`, showLogin);
     $app.querySelectorAll('[data-k]').forEach(b => b.onclick = () => {
       const k = b.dataset.k;
       if (k === 'del') { pin = pin.slice(0, -1); return draw(); }
-      if (pin.length >= 4) return;
+      if (k === 'ok') { if (pin.length >= 4) done(pin); return; }
+      if (pin.length >= (len || max)) return;
       pin += k; draw();
-      if (pin.length === 4) setTimeout(() => done(pin), 120);
+      if (pin.length === (len || max)) setTimeout(() => done(pin), 120);
     });
   };
   draw();
@@ -286,14 +296,24 @@ function pinScreen(title, hint, warn, done){
 async function enterPin(pin){
   S.pin = pin;
   try { await doInit(); }
-  catch (e) { S.pin = ''; e.code === 'ERR_PIN' ? pinScreen(S.user, 'Введите PIN', ERR.ERR_PIN, enterPin) : showError(e.code, null, showLogin); }
+  catch (e) {
+    if (e.code === 'ERR_NEW_PIN') return newPinStart(pin);
+    S.pin = '';
+    e.code === 'ERR_PIN' ? pinScreen(S.user, 'Введите PIN', ERR.ERR_PIN, enterPin, 0) : showError(e.code, null, showLogin);
+  }
 }
-function newPin1(p1){
-  pinScreen(S.user, 'Повторите PIN', '', async (p2) => {
-    if (p1 !== p2) return pinScreen(S.user, 'Первый вход. Придумайте PIN из 4 цифр', 'PIN не совпал. Придумайте ещё раз.', newPin1);
-    try { await api('setPin', { newPin: p1 }, 'Сохраняю…'); await enterPin(p1); }
-    catch (e) { showError(e.code, null, showLogin); }
-  });
+// Старый PIN больше не пускает: сразу задаём новый из 6 цифр (09.11.2026)
+function newPinStart(oldPin, warn){
+  pinScreen(S.user, 'Придумайте новый PIN из 6 цифр', warn || 'Для защиты старый PIN больше не действует. Придумайте новый и запомните его.', p1 => {
+    pinScreen(S.user, 'Повторите новый PIN', '', async (p2) => {
+      if (p1 !== p2) return newPinStart(oldPin, 'PIN не совпал. Придумайте ещё раз.');
+      try { await api('changePin', { pin: oldPin, newPin: p1 }, 'Сохраняю…'); await enterPin(p1); }
+      catch (e) {
+        if (e.code === 'ERR_PIN_SAME' || e.code === 'ERR_PIN_FORMAT') return newPinStart(oldPin, ERR[e.code]);
+        logout(); showError(e.code, null, showLogin);
+      }
+    }, 6);
+  }, 6);
 }
 
 /* ================= МЕСЯЦ ================= */

@@ -1,6 +1,6 @@
 /* Зарплата — работа как приложение. Свои файлы берёт из сети, без сети — из памяти планшета.
    Запросы к Google (Apps Script) не трогает. */
-const CACHE = 'zarplata-v1';
+const CACHE = 'zarplata-v2';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => {

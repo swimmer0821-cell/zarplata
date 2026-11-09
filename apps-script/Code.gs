@@ -97,8 +97,8 @@ function doPost(e) {
   let req;
   try { req = JSON.parse(e.postData.contents); } catch (err) { return out_({ ok: false, error: 'ERR_DATA' }); }
   try {
-    if (req.action === 'users') return out_({ ok: true, data: readUsers_().map(u => ({ name: u.name, hasPin: !!u.pin })) });
-    if (req.action === 'setPin') return out_({ ok: true, data: setPin_(req.user, req.newPin) });
+    if (req.action === 'users') return out_({ ok: true, data: readUsers_().map(u => ({ name: u.name })) });   // без признака «PIN задан» (защита, 09.11.2026)
+    if (req.action === 'changePin') return out_({ ok: true, data: changePin_(req.user, req.pin, req.newPin) });
     const user = auth_(req.user, req.pin);
     let data;
     switch (req.action) {
@@ -124,23 +124,57 @@ function withLock_(fn) { const l = LockService.getScriptLock(); l.waitLock(20000
 function readUsers_() {
   return values_(SH_USERS).filter(r => s_(r[0])).map(r => ({ name: s_(r[0]), pin: s_(r[1]) }));
 }
+// Защита входа (09.11.2026):
+//  • PIN хранится отпечатком «h:соль:sha256»; старый открытый PIN годится только чтобы сразу задать новый (6 цифр);
+//  • 5 неверных PIN подряд — вход для этого имени закрыт на 10 минут;
+//  • сам себе первый PIN задать нельзя: руководитель вписывает временный PIN в лист «Пользователи», при входе его сразу меняют.
+const PIN_LEN = 6, MAX_FAILS = 5, LOCK_MIN = 10;
+function pinHash_(pin, salt) {
+  const b = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, salt + ':' + pin, Utilities.Charset.UTF_8);
+  return b.map(x => ('0' + (x & 255).toString(16)).slice(-2)).join('');
+}
+function pinOk_(stored, pin) {
+  if (stored.indexOf('h:') === 0) { const p = stored.split(':'); return p.length === 3 && pinHash_(String(pin || ''), p[1]) === p[2]; }
+  return String(pin || '') === stored;
+}
+function failKey_(name) { return 'fail:' + s_(name).toLowerCase(); }
+function checkLock_(name) {
+  const f = JSON.parse(PropertiesService.getScriptProperties().getProperty(failKey_(name)) || '{"n":0,"until":0}');
+  if (f.until > Date.now()) throw new Error('ERR_LOCKED');
+  return f;
+}
+function failed_(name, f) {
+  f.n = (f.n || 0) + 1;
+  if (f.n >= MAX_FAILS) { f.until = Date.now() + LOCK_MIN * 60000; f.n = 0; }
+  PropertiesService.getScriptProperties().setProperty(failKey_(name), JSON.stringify(f));
+}
+function passed_(name, f) { if (f.n || f.until) PropertiesService.getScriptProperties().deleteProperty(failKey_(name)); }
 function auth_(name, pin) {
   const u = readUsers_().find(x => x.name === s_(name));
   if (!u) throw new Error('ERR_USER');
   if (!u.pin) throw new Error('ERR_NO_PIN');
-  if (String(pin || '') !== u.pin) throw new Error('ERR_PIN');
+  const f = checkLock_(u.name);
+  if (!pinOk_(u.pin, pin)) { failed_(u.name, f); throw new Error('ERR_PIN'); }
+  passed_(u.name, f);
+  if (u.pin.indexOf('h:') !== 0) throw new Error('ERR_NEW_PIN');   // старый PIN: пустить только после смены
   return u;
 }
-// Первый вход: человек сам придумывает PIN. Сброс — очистить ячейку PIN.
-function setPin_(name, newPin) {
+// Смена PIN: текущий (старый или новый) + новый из 6 цифр. Хранится только отпечаток.
+function changePin_(name, oldPin, newPin) {
   const pin = String(newPin || '');
-  if (!/^\d{4}$/.test(pin)) throw new Error('ERR_PIN_FORMAT');
+  if (!new RegExp('^\\d{' + PIN_LEN + '}$').test(pin)) throw new Error('ERR_PIN_FORMAT');
   return withLock_(() => {
     const sh = sheet_(SH_USERS), v = sh.getDataRange().getValues();
     for (let r = 1; r < v.length; r++) {
       if (s_(v[r][0]) && s_(v[r][0]) === s_(name)) {
-        if (s_(v[r][1])) throw new Error('ERR_PIN_EXISTS');
-        sh.getRange(r + 1, 2).setNumberFormat('@').setValue(pin);
+        const stored = s_(v[r][1]);
+        if (!stored) throw new Error('ERR_NO_PIN');
+        const f = checkLock_(name);
+        if (!pinOk_(stored, oldPin)) { failed_(name, f); throw new Error('ERR_PIN'); }
+        passed_(name, f);
+        if (pinOk_(stored, pin)) throw new Error('ERR_PIN_SAME');
+        const salt = Utilities.getUuid().replace(/-/g, '').slice(0, 16);
+        sh.getRange(r + 1, 2).setNumberFormat('@').setValue('h:' + salt + ':' + pinHash_(pin, salt));
         return { ok: true };
       }
     }
@@ -316,7 +350,7 @@ function saveEmp_(user, e) {
   if (!e || !s_(e.name)) throw new Error('ERR_NAME');
   const type = TYPES.indexOf(s_(e.type)) >= 0 ? s_(e.type) : 'Месяц';
   const gross = e.gross === undefined || e.gross === '' ? Math.round(money_(e.card) / (1 - TAX)) : money_(e.gross);
-  const vals = [s_(e.name).slice(0, 60), safe_(e.fio, 80), safe_(e.role, 80), type, money_(e.rate), money_(e.card), e.active === false ? 'Нет' : 'Да', safe_(e.comment, 300),
+  const vals = [safe_(e.name, 60), safe_(e.fio, 80), safe_(e.role, 80), type, money_(e.rate), money_(e.card), e.active === false ? 'Нет' : 'Да', safe_(e.comment, 300),
     gross, costCat_(e.cat)];
   const sh = sheet_(SH_EMP), emps = readEmps_();
   if (s_(e.id)) {
