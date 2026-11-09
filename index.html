@@ -276,9 +276,9 @@ function pinScreen(title, hint, warn, done, len){
   let pin = '';
   const max = 6;
   const draw = () => {
-    const shown = len ? len : Math.max(4, pin.length);
+    const shown = len || 6;   // вход: до 6 цифр (старые PIN — 4 цифры, тогда «Войти»)
     screen(title, `<h2>${esc(hint)}</h2>${warn ? `<div class="warn" role="alert">${esc(warn)}</div>` : ''}
-      <div class="display" aria-live="polite">${'●'.repeat(pin.length)}${'○'.repeat(Math.max(0, shown - pin.length))}</div>
+      ${len ? '' : '<p style="margin:0 0 8px;opacity:.75;font-size:15px">PIN из 6 цифр (старый из 4 — потом нажмите «Войти»)</p>'}<div class="display" aria-live="polite">${'●'.repeat(pin.length)}${'○'.repeat(Math.max(0, shown - pin.length))}</div>
       <div class="pad">${[1,2,3,4,5,6,7,8,9].map(n => `<button class="key" type="button" data-k="${n}">${n}</button>`).join('')}
       <button class="key wide" type="button" data-k="del">Стереть</button><button class="key" type="button" data-k="0">0</button>
       ${len ? '<span></span>' : `<button class="key wide" type="button" data-k="ok"${pin.length >= 4 ? '' : ' disabled'}>Войти</button>`}</div>`, showLogin);
