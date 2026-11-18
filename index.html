@@ -122,6 +122,8 @@ main>.btn,.dlg>.btn{flex:0 0 auto}
 .allt tr[data-id]{cursor:pointer}.allt tr[data-id]:active td{background:var(--soft)}
 .allt td .st{display:block;font-size:11px;font-weight:700;margin-top:1px}
 .allt tr.tt td{font-weight:800;font-size:13px;border-top:2px solid var(--ink);border-bottom:0;padding-top:10px}
+.allt tr.tl td{font-weight:800;font-size:13px;border-top:2px solid var(--ink);color:#b45309;padding-top:10px}
+.allt tr.tl + tr.tt td{border-top:1px solid var(--line,#d3dde1)}
 @media (max-width:440px){.allt table{font-size:11px}.allt td,.allt th{padding-left:3px}.allt td:first-child{font-size:12px}.allt th{font-size:10px}}
 .leg{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;font-weight:600;margin-top:4px}
 .kv{display:grid;grid-template-columns:1fr auto;gap:6px 12px;font-size:16px}
@@ -383,6 +385,9 @@ function allTable(rows, t){
     <table><thead><tr><th>Сотрудник</th><th class="c-card">Официально</th><th class="c-cash">Наличные</th><th class="c-adv">Аванс</th><th>Итого</th></tr></thead>
     <tbody>${groupRows(rows).map(g => `<tr class="gh"><td colspan="5">${esc(g.cat)}</td></tr>` + g.rows.map(tr).join('') +
       `<tr class="gs"><td>Итого</td><td class="num c-card">${money(g.rows.reduce((a, r) => a + r.card, 0))}</td><td class="num c-cash">${money(g.rows.reduce((a, r) => a + r.cash, 0))}</td><td class="num c-adv">${money(g.rows.reduce((a, r) => a + (r.adv || 0), 0))}</td><td class="num">${money(g.full)}</td></tr>`).join('')}
+    ${(() => { const lc = rows.reduce((a, r) => a + Math.max(0, r.leftCard || 0), 0), lh = rows.reduce((a, r) => a + Math.max(0, r.leftCash || 0), 0),
+        n = rows.filter(r => (r.leftCard || 0) + (r.leftCash || 0) > 0).length;   // остаток к выдаче (с 18.11.2026)
+      return `<tr class="tl"><td>Осталось выдать<br><small>${n} чел.</small></td><td class="num c-card">${money(lc)}</td><td class="num c-cash">${money(lh)}</td><td class="num c-adv"></td><td class="num">${money(lc + lh)}</td></tr>`; })()}
     <tr class="tt"><td>ВСЕГО<br><small>${t.people} чел.</small></td><td class="num c-card">${money(t.card)}</td><td class="num c-cash">${money(t.cash)}</td><td class="num c-adv">${money(t.adv || 0)}</td><td class="num">${money(t.full)}</td></tr></tbody></table></div>`;
 }
 // Норма дней для оклада: рабочие — дней в месяце минус 4 выходных; администрация — будние дни (пн–пт)
